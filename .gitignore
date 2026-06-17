@@ -1,0 +1,62 @@
+# Build outputs
+build*/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+bin/
+obj/
+out/
+
+# CMake generated
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+CMakeUserPresets.json
+CTestTestfile.cmake
+
+# Qt generated
+moc_*.cpp
+moc_*.h
+ui_*.h
+qrc_*.cpp
+*.pro.user*
+*.qm
+*_autogen/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.sln
+*.vcproj
+*.vcxproj
+*.vcxproj.filters
+*.suo
+*.userosscache
+*.sln.docstates
+
+# External dependencies (large binaries, not versioned here)
+external/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Qt APPDemo specific
+QtAPPDemo.vcxproj.user
+
+# Build artifacts
+*.tlog
+
+# Claude Code local settings
+.claude/
