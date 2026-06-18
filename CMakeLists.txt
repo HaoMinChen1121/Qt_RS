@@ -56,6 +56,9 @@ add_executable(MainWindowExample
     domain/ProcessingTask.h
     domain/ProcessingReport.h
     domain/WorkflowGraph.h    domain/WorkflowGraph.cpp
+    domain/ImageSource.h
+    domain/PipelineDefinition.h
+    domain/Project.h
 
     # === 业务服务接口 ===
     services/IProcessingService.h
@@ -81,6 +84,7 @@ add_executable(MainWindowExample
     dataaccess/IRasterWriter.h
     dataaccess/IProcessingReportRepository.h
     dataaccess/IWorkflowTemplateRepository.h
+    dataaccess/IProjectRepository.h
     dataaccess/ISensorProduct.h
     dataaccess/SensorProductFactory.h
 
@@ -89,6 +93,7 @@ add_executable(MainWindowExample
     dataaccess/impl/GdalRasterWriter.h              dataaccess/impl/GdalRasterWriter.cpp
     dataaccess/impl/JsonReportRepository.h          dataaccess/impl/JsonReportRepository.cpp
     dataaccess/impl/XmlWorkflowTemplateRepository.h dataaccess/impl/XmlWorkflowTemplateRepository.cpp
+    dataaccess/impl/JsonProjectRepository.h         dataaccess/impl/JsonProjectRepository.cpp
     dataaccess/impl/Sentinel2Product.h              dataaccess/impl/Sentinel2Product.cpp
     dataaccess/impl/LandsatProduct.h                dataaccess/impl/LandsatProduct.cpp
     dataaccess/impl/GfProduct.h                     dataaccess/impl/GfProduct.cpp
@@ -96,6 +101,7 @@ add_executable(MainWindowExample
 
     # === 控制器 / 组装层 ===
     controllers/ApplicationController.h     controllers/ApplicationController.cpp
+    controllers/PipelineExpander.h          controllers/PipelineExpander.cpp
     controllers/TaskWorker.h                controllers/TaskWorker.cpp
     controllers/WorkerManager.h             controllers/WorkerManager.cpp
     controllers/workers/RadiometricWorker.h controllers/workers/RadiometricWorker.cpp
@@ -148,6 +154,7 @@ add_executable(MainWindowExample
 
     # === 表示层：面板与控件 ===
     ui/WorkflowPanel.h              ui/WorkflowPanel.cpp
+    ui/PipelineDialog.h             ui/PipelineDialog.cpp
     ui/BatchProcessPanel.h          ui/BatchProcessPanel.cpp
     ui/LayerPanel.h                 ui/LayerPanel.cpp
     ui/MapCanvasWidget.h            ui/MapCanvasWidget.cpp

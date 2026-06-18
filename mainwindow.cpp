@@ -710,61 +710,35 @@ void MainWindow::createCategoryMosaic(SARibbonCategory* page)
 }
 
 // ========================================================================
-// Category 5: 可视化任务流设计器
+// Category 5: 一键全流程处理
 // ========================================================================
 void MainWindow::createCategoryWorkflow(SARibbonCategory* page)
 {
-    // --- Panel 1: 模板管理 ---
-    SARibbonPanel* pnlTemplate = page->addPanel(tr("模板管理"));
+    // --- Panel 1: 工程管理 ---
+    SARibbonPanel* pnlTemplate = page->addPanel(tr("工程管理"));
 
-    QAction* actNewWf = createAction(tr("新建\n工作流"), ":/icon/icon/save.svg", "actNewWf");
+    QAction* actNewWf = createAction(tr("新建\n工程"), ":/icon/icon/save.svg", "actNewWf");
     pnlTemplate->addLargeAction(actNewWf);
     connect(actNewWf, &QAction::triggered, this, [this]()
     {
-        QDialog* dlg = new QDialog(this);
-        dlg->setWindowTitle(tr("工作流设计器"));
-        dlg->resize(900, 600);
-        auto* lay = new QVBoxLayout(dlg);
-        WorkflowPanel* wfPanel = new WorkflowPanel(dlg);
-        lay->addWidget(wfPanel);
-        dlg->exec();
-        delete dlg;
+        emit workflowNewRequested();
     });
 
-    QAction* actOpenTmpl = createAction(tr("打开\n模板"), ":/icon/icon/file.svg", "actOpenTmpl");
-    pnlTemplate->addLargeAction(actOpenTmpl);
-    connect(actOpenTmpl, &QAction::triggered, this, [this]()
+    QAction* actOpenProj = createAction(tr("打开\n工程"), ":/icon/icon/file.svg", "actOpenProj");
+    pnlTemplate->addLargeAction(actOpenProj);
+    connect(actOpenProj, &QAction::triggered, this, [this]()
     {
-        QString file = QFileDialog::getOpenFileName(this, tr("加载工作流模板"),
-            QString(), tr("工作流模板 (*.wft *.xml *.json);;所有文件 (*.*)"));
-        Q_UNUSED(file);
-        // TODO: 加载模板后打开设计器
+        emit workflowLoadRequested();
     });
 
-    QAction* actSaveTmpl = createAction(tr("保存模板"), ":/icon/icon/save.svg", "actSaveTmpl");
-    pnlTemplate->addSmallAction(actSaveTmpl);
-    connect(actSaveTmpl, &QAction::triggered, this, [this]()
+    QAction* actSaveProj = createAction(tr("保存工程"), ":/icon/icon/save.svg", "actSaveProj");
+    pnlTemplate->addSmallAction(actSaveProj);
+    connect(actSaveProj, &QAction::triggered, this, [this]()
     {
-        QString file = QFileDialog::getSaveFileName(this, tr("保存工作流模板"),
-            QString(), tr("工作流模板 (*.wft *.xml *.json);;所有文件 (*.*)"));
-        Q_UNUSED(file);
+        emit workflowSaveRequested();
     });
-
-    // --- Panel 2: 执行 ---
-    SARibbonPanel* pnlExec = page->addPanel(tr("执行"));
-
-    QAction* actRunWf = createAction(tr("运行\n工作流"), ":/icon/icon/folder-cog.svg", "actRunWf");
-    pnlExec->addLargeAction(actRunWf);
-    connect(actRunWf, &QAction::triggered, this, [this]()
-    {
-        // TODO: emit workflowRunRequested(nodeSequence);
-    });
-
-    QAction* actClearWf = createAction(tr("清空"), ":/icon/icon/delete.svg", "actClearWf");
-    pnlExec->addSmallAction(actClearWf);
 
     pnlTemplate->setVisible(true);
-    pnlExec->setVisible(true);
 }
 
 // ========================================================================

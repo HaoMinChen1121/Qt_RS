@@ -1,5 +1,6 @@
 #include "ApplicationController.h"
 #include "controllers/WorkerManager.h"
+#include "controllers/PipelineExpander.h"
 
 #include <ogr_srs_api.h>
 
@@ -18,6 +19,7 @@
 #include "dataaccess/impl/GdalRasterWriter.h"
 #include "dataaccess/impl/JsonReportRepository.h"
 #include "dataaccess/impl/XmlWorkflowTemplateRepository.h"
+#include "dataaccess/impl/JsonProjectRepository.h"
 
 // Domain
 #include "domain/params/GeometricCorrectionParams.h"
@@ -33,6 +35,7 @@
 #include "ui/BandCombinationDialog.h"
 #include "ui/ProductBandDialog.h"
 #include "ui/ExportDialog.h"
+#include "ui/PipelineDialog.h"
 
 #include <qgsmapcanvas.h>
 #include <qgsrectangle.h>
@@ -78,6 +81,7 @@ void ApplicationController::initialize()
     wireFusionSignals();
     wireMosaicSignals();
     wireGeometricSignals();
+    wireWorkflowSignals();
     wireGeneralSignals();
 
     qDebug() << "[ApplicationController] Initialization complete";
@@ -96,6 +100,7 @@ void ApplicationController::createDataAccess()
     mRasterWriter     = std::make_unique<GdalRasterWriter>();
     mReportRepo       = std::make_unique<JsonReportRepository>();
     mWorkflowRepo     = std::make_unique<XmlWorkflowTemplateRepository>();
+    mProjectRepo      = std::make_unique<JsonProjectRepository>();
 }
 
 void ApplicationController::createServices()
@@ -106,7 +111,10 @@ void ApplicationController::createServices()
         mRasterReader.get(), mRasterWriter.get(), mWorkerManager.get());
     mMosaicSvc      = std::make_unique<MosaicServiceImpl>(mWorkerManager.get());
     mGeometricSvc   = std::make_unique<GeometricServiceImpl>(mWorkerManager.get());
-    mWorkflowSvc    = std::make_unique<WorkflowServiceImpl>(mWorkflowRepo.get());
+    mWorkflowSvc    = std::make_unique<WorkflowServiceImpl>(
+        mRadiometricSvc.get(), mGeometricSvc.get(),
+        mFusionSvc.get(), mMosaicSvc.get(),
+        mWorkflowRepo.get());
     mBatchSvc       = std::make_unique<BatchServiceImpl>();
     mLayerSvc       = std::make_unique<LayerServiceImpl>(mRasterReader.get());
 }
@@ -465,16 +473,13 @@ void ApplicationController::wireRadiometricSignals()
     connect(svc, &IRadiometricService::finished, this,
         [this](bool success, const QString& outputPath)
         {
+            if (mPipelineRunning) return;  // 流程模式不弹窗
             if (success)
-            {
                 QMessageBox::information(mMainWindow, tr("辐射定标完成"),
                     tr("处理成功！\n\n输出路径:\n%1").arg(outputPath));
-            }
             else
-            {
                 QMessageBox::warning(mMainWindow, tr("辐射定标失败"),
                     tr("处理未成功完成，请检查参数或日志。"));
-            }
         });
     connect(svc, &IRadiometricService::errorOccurred, this,
         [this](const QString& error)
@@ -502,6 +507,7 @@ void ApplicationController::wireFusionSignals()
     connect(svc, &IFusionService::finished, this,
         [this](bool success, const QString& outputPath)
         {
+            if (mPipelineRunning) return;
             if (success)
                 QMessageBox::information(mMainWindow, tr("融合完成"),
                     tr("融合成功！\n\n输出路径:\n%1").arg(outputPath));
@@ -544,6 +550,7 @@ void ApplicationController::wireMosaicSignals()
     connect(svc, &IMosaicService::finished, this,
         [this](bool success, const QString& outputPath)
         {
+            if (mPipelineRunning) return;
             if (success)
                 QMessageBox::information(mMainWindow, tr("镶嵌完成"),
                     tr("镶嵌成功！\n\n输出路径:\n%1").arg(outputPath));
@@ -604,6 +611,7 @@ void ApplicationController::wireGeometricSignals()
         });
     connect(svc, &IGeometricService::finished, this,
         [this](bool success, const QString& outputPath) {
+            if (mPipelineRunning) return;
             if (success)
                 QMessageBox::information(mMainWindow, tr("Geometric Correction Complete"),
                     tr("Processing succeeded!\n\nOutput:\n%1").arg(outputPath));
@@ -620,6 +628,95 @@ void ApplicationController::wireGeometricSignals()
     connect(mMainWindow, &MainWindow::cancelCorrectionRequested, this, [svc]() {
         svc->cancel();
     });
+}
+
+void ApplicationController::wireWorkflowSignals()
+{
+    auto* svc = mWorkflowSvc.get();
+
+    // 确保 PipelineDialog 已创建并完成信号连接
+    auto ensureDialog = [this, svc]() -> PipelineDialog*
+    {
+        if (!mPipelineDialog)
+        {
+            mPipelineDialog = new PipelineDialog(mMainWindow);
+            mPipelineDialog->setAttribute(Qt::WA_DeleteOnClose, false);
+
+            connect(mPipelineDialog, &PipelineDialog::runRequested, this,
+                [this, svc](const Project& p) {
+                    mPipelineRunning = p.output.autoConfirm;
+                    svc->runProject(p);
+                    mPipelineRunning = false;
+                });
+
+            connect(mPipelineDialog, &PipelineDialog::saveRequested, this,
+                [this](const QString& fp) {
+                    mProjectRepo->save(mPipelineDialog->project(), fp);
+                });
+
+            connect(mPipelineDialog, &PipelineDialog::loadRequested, this,
+                [this](const QString& fp) {
+                    Project p = mProjectRepo->load(fp);
+                    if (p.isValid()) mPipelineDialog->setProject(p);
+                });
+
+            connect(svc, &IWorkflowService::nodeProgressChanged,
+                mPipelineDialog, &PipelineDialog::onStageProgress);
+            connect(svc, &IWorkflowService::workflowFinished,
+                mPipelineDialog, &PipelineDialog::onPipelineFinished);
+            connect(svc, &IWorkflowService::nodeError,
+                mPipelineDialog, &PipelineDialog::onPipelineError);
+        }
+        return mPipelineDialog;
+    };
+
+    // Ribbon "新建工程" → 打开 PipelineDialog（默认标准流程）
+    connect(mMainWindow, &MainWindow::workflowNewRequested, this, [this, ensureDialog]()
+    {
+        Project p;
+        p.pipeline = PipelineExpander::standardPipeline();
+        auto* dlg = ensureDialog();
+        dlg->setProject(p);
+        dlg->show();
+        dlg->raise();
+        dlg->activateWindow();
+    });
+
+    // Ribbon "保存工程" → 直接保存
+    connect(mMainWindow, &MainWindow::workflowSaveRequested, this,
+        [this]()
+        {
+            if (!mPipelineDialog) return;
+            QString file = QFileDialog::getSaveFileName(mMainWindow,
+                QStringLiteral("保存工程"), QString(),
+                QStringLiteral("遥感工程文件 (*.rjp);;所有文件 (*.*)"));
+            if (!file.isEmpty())
+                mProjectRepo->save(mPipelineDialog->project(), file);
+        });
+
+    // Ribbon "加载工程" → 加载并打开对话框
+    connect(mMainWindow, &MainWindow::workflowLoadRequested, this,
+        [this, ensureDialog]()
+        {
+            QString file = QFileDialog::getOpenFileName(mMainWindow,
+                QStringLiteral("加载工程"), QString(),
+                QStringLiteral("遥感工程文件 (*.rjp);;所有文件 (*.*)"));
+            if (file.isEmpty()) return;
+
+            Project proj = mProjectRepo->load(file);
+            if (!proj.isValid())
+            {
+                QMessageBox::warning(mMainWindow, QStringLiteral("加载失败"),
+                    QStringLiteral("无法解析工程文件: %1").arg(file));
+                return;
+            }
+
+            auto* dlg = ensureDialog();
+            dlg->setProject(proj);
+            dlg->show();
+            dlg->raise();
+            dlg->activateWindow();
+        });
 }
 
 void ApplicationController::wireGeneralSignals()

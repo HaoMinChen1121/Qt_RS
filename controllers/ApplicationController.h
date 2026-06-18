@@ -18,9 +18,11 @@ class IRasterReader;
 class IRasterWriter;
 class IProcessingReportRepository;
 class IWorkflowTemplateRepository;
+class IProjectRepository;
 
 class MainWindow;
 class WorkerManager;
+class PipelineDialog;
 
 /**
  * @brief 组合根 / DI 容器 — 唯一同时引用 UI 和业务层的类
@@ -47,6 +49,7 @@ private:
     void wireFusionSignals();
     void wireMosaicSignals();
     void wireGeometricSignals();
+    void wireWorkflowSignals();
     void wireGeneralSignals();
 
     MainWindow* mMainWindow;
@@ -65,9 +68,16 @@ private:
     std::unique_ptr<IRasterWriter>              mRasterWriter;
     std::unique_ptr<IProcessingReportRepository> mReportRepo;
     std::unique_ptr<IWorkflowTemplateRepository> mWorkflowRepo;
+    std::unique_ptr<IProjectRepository>         mProjectRepo;
 
     // Worker management
     std::unique_ptr<WorkerManager> mWorkerManager;
+
+    // UI (non-owned, created by MainWindow)
+    PipelineDialog* mPipelineDialog = nullptr;
+
+    // 流程模式下抑制弹窗
+    bool mPipelineRunning = false;
 };
 
 #endif // APPLICATIONCONTROLLER_H

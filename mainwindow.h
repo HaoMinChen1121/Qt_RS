@@ -61,6 +61,9 @@ signals:
     void cancelCorrectionRequested();
     void fusionRequested(const ImageFusionParams& params);
     void mosaicRequested(const MosaicParams& params);
+    void workflowNewRequested();
+    void workflowSaveRequested();
+    void workflowLoadRequested();
 
 private:
     void createCategoryFile(SARibbonCategory* page);
