@@ -1,0 +1,311 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="18.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{75B62D94-CAAE-4F71-AEDA-64F76F5FDB6D}</ProjectGuid>
+    <Keyword>QtVS_v304</Keyword>
+    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
+    <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.3.props"
+          Condition="Exists('$(VCTargetsPath)\BuildCustomizations\CUDA 12.3.props')" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
+    <Import Project="$(QtMsBuild)\qt_defaults.props" />
+  </ImportGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
+    <QtInstall>5.15.2</QtInstall>
+    <QtModules>core;xml;gui;widgets;concurrent</QtModules>
+    <QtBuildConfig>release</QtBuildConfig>
+  </PropertyGroup>
+  <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
+    <Message Importance="High" Text="QtMsBuild: could not locate qt.targets, qt.props; project may not build correctly." />
+  </Target>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(QtMsBuild)\Qt.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+  </PropertyGroup>
+  <!-- CUDA 编译设置 -->
+  <ItemDefinitionGroup>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+      <UseLocalEnv>false</UseLocalEnv>
+      <AdditionalOptions>-allow-unsupported-compiler -D_MWAITXINTRIN_H_INCLUDED -D_ALLOW_COMPILER_AND_STL_VERSION_MISMATCH %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup>
+    <CudaLink>
+      <AdditionalDependencies>cudart.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </CudaLink>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>../SARibbonBar;../qgis-ltr/include;E:\Opencv_new\build\install\include;%(AdditionalIncludeDirectories);$(ProjectDir)domain;$(ProjectDir)services;$(ProjectDir)dataaccess;$(ProjectDir)controllers;$(ProjectDir)algorithms;$(ProjectDir)algorithms/common;$(ProjectDir)algorithms/radiometric</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_USE_MATH_DEFINES;_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OutDir);E:\Opencv_new\build\install\x64\vc17\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SARibbonBar.lib;gdal_i.lib;opencv_world480.lib;qgis_3d.lib;qgis_analysis.lib;qgis_app.lib;qgis_core.lib;qgis_gui.lib;qgis_native.lib;qgis_server.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
+    <ClCompile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y "E:\Opencv_new\build\install\x64\vc17\bin\opencv_world480.dll" "$(OutDir)"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+
+    <QtMoc Include="mainwindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 对话框类 (含 Q_OBJECT) -->
+    <QtMoc Include="ui\RadiometricDialog.h" />
+    <QtMoc Include="ui\GeometricDialog.h" />
+    <QtMoc Include="ui\ExportDialog.h" />
+    <QtMoc Include="ui\FusionDialog.h" />
+    <QtMoc Include="ui\MosaicDialog.h" />
+    <ClInclude Include="ui\GeometricTypes.h" />
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 可选模块面板 (含 Q_OBJECT) -->
+    <QtMoc Include="ui\WorkflowPanel.h" />
+    <QtMoc Include="ui\PipelineDialog.h" />
+    <QtMoc Include="ui\BatchProcessPanel.h" />
+    <!-- 图层面板 (含 Q_OBJECT) -->
+    <QtMoc Include="ui\LayerPanel.h" />
+    <!-- 地图画布控件 (含 Q_OBJECT) -->
+    <QtMoc Include="ui\MapCanvasWidget.h" />
+    <QtMoc Include="ui\BandManagerPanel.h" />
+    <QtMoc Include="ui\BandCombinationDialog.h" />
+    <QtMoc Include="ui\ProductBandDialog.h" />
+    <QtMoc Include="ui\RasterMetadataPanel.h" />
+    <QtMoc Include="ui\SpectralProfileDialog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 参数结构体 (无 Q_OBJECT, 纯头文件) -->
+    <ClInclude Include="domain\params\RadiometricCorrectionParams.h" />
+    <ClInclude Include="domain\params\ImageFusionParams.h" />
+    <ClInclude Include="domain\params\MosaicParams.h" />
+    <ClInclude Include="domain\params\GeometricCorrectionParams.h" />
+    <!-- 领域对象 (纯头文件) -->
+    <ClInclude Include="domain\BandConfiguration.h" />
+    <ClInclude Include="domain\RasterImage.h" />
+    <ClInclude Include="domain\SensorInfo.h" />
+    <ClInclude Include="domain\ProductDescriptor.h" />
+    <ClInclude Include="domain\ProcessingTask.h" />
+    <ClInclude Include="domain\ProcessingReport.h" />
+    <ClInclude Include="domain\WorkflowGraph.h" />
+    <ClInclude Include="domain\ImageSource.h" />
+    <ClInclude Include="domain\PipelineDefinition.h" />
+    <ClInclude Include="domain\Project.h" />
+    <!-- 数据访问接口 (纯头文件) -->
+    <ClInclude Include="dataaccess\IRasterReader.h" />
+    <ClInclude Include="dataaccess\IRasterWriter.h" />
+    <ClInclude Include="dataaccess\IProcessingReportRepository.h" />
+    <ClInclude Include="dataaccess\IWorkflowTemplateRepository.h" />
+    <ClInclude Include="dataaccess\IProjectRepository.h" />
+    <ClInclude Include="dataaccess\ISensorProduct.h" />
+    <ClInclude Include="dataaccess\SensorProductFactory.h" />
+    <!-- 数据访问实现 (纯头文件) -->
+    <ClInclude Include="dataaccess\impl\GdalRasterReader.h" />
+    <ClInclude Include="dataaccess\impl\GdalRasterWriter.h" />
+    <ClInclude Include="dataaccess\impl\JsonReportRepository.h" />
+    <ClInclude Include="dataaccess\impl\XmlWorkflowTemplateRepository.h" />
+    <ClInclude Include="dataaccess\impl\JsonProjectRepository.h" />
+    <ClInclude Include="dataaccess\impl\Sentinel2Product.h" />
+    <ClInclude Include="dataaccess\impl\LandsatProduct.h" />
+    <ClInclude Include="dataaccess\impl\GfProduct.h" />
+    <ClInclude Include="dataaccess\impl\DescriptorProduct.h" />
+    <QtMoc Include="controllers\workers\FusionWorker.h" />
+    <QtMoc Include="controllers\workers\MosaicWorker.h" />
+    <!-- 算法层：通用类型 (无 Q_OBJECT) -->
+    <ClInclude Include="algorithms\common\AlgorithmResult.h" />
+    <ClInclude Include="algorithms\common\ProgressCallback.h" />
+    <ClInclude Include="algorithms\common\GeoTransformUtils.h" />
+    <!-- 算法层：辐射定标 (无 Q_OBJECT) -->
+    <ClInclude Include="algorithms\radiometric\DnToRadiance.h" />
+    <ClInclude Include="algorithms\radiometric\DnToReflectance.h" />
+    <ClInclude Include="algorithms\radiometric\AtmosphericCorrector.h" />
+    <!-- 算法层：图像融合 -->
+    <ClInclude Include="algorithms\fusion\IFusionAlgorithm.h" />
+    <ClInclude Include="algorithms\fusion\IhsFusion.h" />
+    <ClInclude Include="algorithms\fusion\BroveyFusion.h" />
+    <ClInclude Include="algorithms\fusion\GramSchmidtFusion.h" />
+    <ClInclude Include="algorithms\fusion\PcaFusion.h" />
+    <ClInclude Include="algorithms\fusion\HpfFusion.h" />
+    <ClInclude Include="algorithms\fusion\WaveletFusion.h" />
+    <ClInclude Include="algorithms\fusion\QualityMetricsEvaluator.h" />
+    <ClInclude Include="algorithms\mosaic\HistogramMatcher.h" />
+    <ClInclude Include="algorithms\mosaic\SeamlineGenerator.h" />
+    <ClInclude Include="algorithms\mosaic\FeatheringBlender.h" />
+    <ClInclude Include="algorithms\mosaic\MosaicAssembler.h" />
+    <!-- 算法层：几何校正 -->
+    <ClInclude Include="algorithms\geometric\GcpModelSolver.h" />
+    <ClInclude Include="algorithms\geometric\GcpMatcher.h" />
+    <ClInclude Include="algorithms\geometric\GeometricCorrector.h" />
+    <ClInclude Include="algorithms\geometric\ResampleEngine.h" />
+    <ClInclude Include="algorithms\geometric\cuda\ResampleKernels.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 业务服务接口 (含 Q_OBJECT) -->
+    <QtMoc Include="services\IProcessingService.h" />
+    <QtMoc Include="services\IRadiometricService.h" />
+    <QtMoc Include="services\IFusionService.h" />
+    <QtMoc Include="services\IMosaicService.h" />
+    <QtMoc Include="services\IWorkflowService.h" />
+    <QtMoc Include="services\IBatchService.h" />
+    <QtMoc Include="services\ILayerService.h" />
+    <QtMoc Include="services\IGeometricService.h" />
+    <!-- 业务服务实现 (含 Q_OBJECT) -->
+    <QtMoc Include="services\impl\RadiometricServiceImpl.h" />
+    <QtMoc Include="services\impl\FusionServiceImpl.h" />
+    <QtMoc Include="services\impl\MosaicServiceImpl.h" />
+    <QtMoc Include="services\impl\WorkflowServiceImpl.h" />
+    <QtMoc Include="services\impl\BatchServiceImpl.h" />
+    <QtMoc Include="services\impl\LayerServiceImpl.h" />
+    <QtMoc Include="services\impl\GeometricServiceImpl.h" />
+    <!-- 控制器 (含 Q_OBJECT) -->
+    <ClInclude Include="controllers\PipelineExpander.h" />
+    <QtMoc Include="controllers\ApplicationController.h" />
+    <QtMoc Include="controllers\TaskWorker.h" />
+    <QtMoc Include="controllers\WorkerManager.h" />
+    <!-- TaskWorker 子类 (含 Q_OBJECT) -->
+    <QtMoc Include="controllers\workers\RadiometricWorker.h" />
+    <QtMoc Include="controllers\workers\GeometricWorker.h" />
+  </ItemGroup>
+  <ItemGroup>
+
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainwindow.cpp" />
+    <!-- 对话框类实现 -->
+    <ClCompile Include="ui\RadiometricDialog.cpp" />
+    <ClCompile Include="ui\GeometricDialog.cpp" />
+    <ClCompile Include="ui\ExportDialog.cpp" />
+    <ClCompile Include="ui\FusionDialog.cpp" />
+    <ClCompile Include="ui\MosaicDialog.cpp" />
+    <!-- 可选模块面板实现 -->
+    <ClCompile Include="ui\WorkflowPanel.cpp" />
+    <ClCompile Include="ui\PipelineDialog.cpp" />
+    <ClCompile Include="ui\BatchProcessPanel.cpp" />
+    <!-- 图层面板实现 -->
+    <ClCompile Include="ui\LayerPanel.cpp" />
+    <!-- 地图画布控件实现 -->
+    <ClCompile Include="ui\MapCanvasWidget.cpp" />
+    <ClCompile Include="ui\BandManagerPanel.cpp" />
+    <ClCompile Include="ui\BandCombinationDialog.cpp" />
+    <ClCompile Include="ui\ProductBandDialog.cpp" />
+    <ClCompile Include="ui\RasterMetadataPanel.cpp" />
+    <ClCompile Include="ui\SpectralProfileDialog.cpp" />
+    <!-- 领域对象实现 -->
+    <ClCompile Include="domain\WorkflowGraph.cpp" />
+    <!-- 业务服务实现 -->
+    <ClCompile Include="services\impl\RadiometricServiceImpl.cpp" />
+    <ClCompile Include="services\impl\FusionServiceImpl.cpp" />
+    <ClCompile Include="services\impl\MosaicServiceImpl.cpp" />
+    <ClCompile Include="services\impl\WorkflowServiceImpl.cpp" />
+    <ClCompile Include="services\impl\BatchServiceImpl.cpp" />
+    <ClCompile Include="services\impl\LayerServiceImpl.cpp" />
+    <ClCompile Include="services\impl\GeometricServiceImpl.cpp" />
+    <!-- 数据访问实现 -->
+    <ClCompile Include="dataaccess\impl\GdalRasterReader.cpp" />
+    <ClCompile Include="dataaccess\impl\GdalRasterWriter.cpp" />
+    <ClCompile Include="dataaccess\impl\JsonReportRepository.cpp" />
+    <ClCompile Include="dataaccess\impl\XmlWorkflowTemplateRepository.cpp" />
+    <ClCompile Include="dataaccess\impl\JsonProjectRepository.cpp" />
+    <ClCompile Include="dataaccess\impl\Sentinel2Product.cpp" />
+    <ClCompile Include="dataaccess\impl\LandsatProduct.cpp" />
+    <ClCompile Include="dataaccess\impl\GfProduct.cpp" />
+    <ClCompile Include="dataaccess\impl\DescriptorProduct.cpp" />
+    <!-- 控制器实现 -->
+    <ClCompile Include="controllers\ApplicationController.cpp" />
+    <ClCompile Include="controllers\PipelineExpander.cpp" />
+    <ClCompile Include="controllers\TaskWorker.cpp" />
+    <ClCompile Include="controllers\WorkerManager.cpp" />
+    <!-- 算法层：通用工具 -->
+    <ClCompile Include="algorithms\common\GeoTransformUtils.cpp" />
+    <!-- 算法层：辐射定标 -->
+    <ClCompile Include="algorithms\radiometric\DnToRadiance.cpp" />
+    <ClCompile Include="algorithms\radiometric\DnToReflectance.cpp" />
+    <ClCompile Include="algorithms\radiometric\AtmosphericCorrector.cpp" />
+    <!-- 算法层：几何校正 -->
+    <ClCompile Include="algorithms\fusion\IhsFusion.cpp" />
+    <ClCompile Include="algorithms\fusion\BroveyFusion.cpp" />
+    <ClCompile Include="algorithms\fusion\GramSchmidtFusion.cpp" />
+    <ClCompile Include="algorithms\fusion\PcaFusion.cpp" />
+    <ClCompile Include="algorithms\fusion\HpfFusion.cpp" />
+    <ClCompile Include="algorithms\fusion\WaveletFusion.cpp" />
+    <ClCompile Include="algorithms\fusion\QualityMetricsEvaluator.cpp" />
+    <ClCompile Include="algorithms\mosaic\HistogramMatcher.cpp" />
+    <ClCompile Include="algorithms\mosaic\SeamlineGenerator.cpp" />
+    <ClCompile Include="algorithms\mosaic\FeatheringBlender.cpp" />
+    <ClCompile Include="algorithms\mosaic\MosaicAssembler.cpp" />
+    <!-- 算法层：几何校正 -->
+    <ClCompile Include="algorithms\geometric\GcpModelSolver.cpp" />
+    <ClCompile Include="algorithms\geometric\GcpMatcher.cpp" />
+    <ClCompile Include="algorithms\geometric\GeometricCorrector.cpp" />
+    <ClCompile Include="algorithms\geometric\ResampleEngine.cpp" />
+    <!-- TaskWorker 子类 -->
+    <ClCompile Include="controllers\workers\RadiometricWorker.cpp" />
+    <ClCompile Include="controllers\workers\FusionWorker.cpp" />
+    <ClCompile Include="controllers\workers\MosaicWorker.cpp" />
+    <ClCompile Include="controllers\workers\GeometricWorker.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- CUDA 源文件 -->
+    <CudaCompile Include="algorithms\geometric\cuda\ResampleKernels.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="resouce.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+
+    <QtUic Include="mainwindow.ui" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 12.3.targets"
+          Condition="Exists('$(VCTargetsPath)\BuildCustomizations\CUDA 12.3.targets')" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
+    <Import Project="$(QtMsBuild)\qt.targets" />
+  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,558 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Translation Files">
+      <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
+      <Extensions>ts</Extensions>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Domain">
+      <UniqueIdentifier>{B2C3D4E5-F6A7-8901-BCDE-F12345678901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Domain\Params">
+      <UniqueIdentifier>{C3D4E5F6-A7B8-9012-CDEF-123456789012}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Services">
+      <UniqueIdentifier>{D4E5F6A7-B8C9-0123-DEF0-234567890123}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Services\Impl">
+      <UniqueIdentifier>{E5F6A7B8-C9D0-1234-EF01-345678901234}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataAccess">
+      <UniqueIdentifier>{F6A7B8C9-D0E1-2345-F012-456789012345}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DataAccess\Impl">
+      <UniqueIdentifier>{A7B8C9D0-E1F2-3456-0123-567890123456}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controllers">
+      <UniqueIdentifier>{B8C9D0E1-F2A3-4567-1234-678901234567}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Controllers\Workers">
+      <UniqueIdentifier>{9A8B7C6D-5E4F-3210-ABCD-EF0123456789}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms">
+      <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-EF1234567899}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\Common">
+      <UniqueIdentifier>{B2C3D4E5-F6A7-8901-BCDE-F12345678902}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\Radiometric">
+      <UniqueIdentifier>{C3D4E5F6-A7B8-9012-CDEF-123456789045}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\Fusion">
+      <UniqueIdentifier>{E5F6A7B8-C9D0-1234-EF01-345678900147}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\Mosaic">
+      <UniqueIdentifier>{F6A7B8C9-D0E1-2345-F012-456789001258}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\Geometric">
+      <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-EF1234567801}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algorithms\Geometric\Cuda">
+      <UniqueIdentifier>{B2C3D4E5-F6A7-8901-BCDE-F12345678902}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="mainwindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ui\RadiometricDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\GeometricDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\ExportDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\FusionDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\MosaicDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <ClInclude Include="ui\GeometricTypes.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <QtMoc Include="ui\WorkflowPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\PipelineDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\BatchProcessPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\MapCanvasWidget.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\BandCombinationDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\BandManagerPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\ProductBandDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\RasterMetadataPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\SpectralProfileDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+        <QtMoc Include="ui\LayerPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="services\IProcessingService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IRadiometricService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IFusionService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IMosaicService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IWorkflowService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IBatchService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\ILayerService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IGeometricService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\RadiometricServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\FusionServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\MosaicServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\WorkflowServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\BatchServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\LayerServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\GeometricServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <ClInclude Include="controllers\PipelineExpander.h">
+      <Filter>Controllers</Filter>
+    </ClInclude>
+    <QtMoc Include="controllers\ApplicationController.h">
+      <Filter>Controllers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\TaskWorker.h">
+      <Filter>Controllers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\WorkerManager.h">
+      <Filter>Controllers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\RadiometricWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\FusionWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\MosaicWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\GeometricWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="domain\params\RadiometricCorrectionParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\ImageFusionParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\MosaicParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\GeometricCorrectionParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\BandConfiguration.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\RasterImage.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\SensorInfo.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\ProductDescriptor.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\ProcessingTask.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\ProcessingReport.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\WorkflowGraph.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\ImageSource.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\PipelineDefinition.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\Project.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\IRasterReader.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\IRasterWriter.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\IProcessingReportRepository.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\IWorkflowTemplateRepository.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\IProjectRepository.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\ISensorProduct.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\SensorProductFactory.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\common\AlgorithmResult.h">
+      <Filter>Algorithms\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\common\ProgressCallback.h">
+      <Filter>Algorithms\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\common\GeoTransformUtils.h">
+      <Filter>Algorithms\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\radiometric\DnToRadiance.h">
+      <Filter>Algorithms\Radiometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\radiometric\DnToReflectance.h">
+      <Filter>Algorithms\Radiometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\radiometric\AtmosphericCorrector.h">
+      <Filter>Algorithms\Radiometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\IFusionAlgorithm.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\IhsFusion.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\BroveyFusion.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\GramSchmidtFusion.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\PcaFusion.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\HpfFusion.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\WaveletFusion.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\fusion\QualityMetricsEvaluator.h">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\mosaic\HistogramMatcher.h">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\mosaic\SeamlineGenerator.h">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\mosaic\FeatheringBlender.h">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\mosaic\MosaicAssembler.h">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\geometric\GcpModelSolver.h">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\geometric\GcpMatcher.h">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\geometric\GeometricCorrector.h">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\geometric\ResampleEngine.h">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClInclude>
+    <ClInclude Include="algorithms\geometric\cuda\ResampleKernels.h">
+      <Filter>Algorithms\Geometric\Cuda</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\GdalRasterReader.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\GdalRasterWriter.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\JsonReportRepository.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\XmlWorkflowTemplateRepository.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\JsonProjectRepository.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\Sentinel2Product.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\LandsatProduct.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\GfProduct.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\impl\DescriptorProduct.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mainwindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\RadiometricDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\GeometricDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ExportDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\FusionDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\MosaicDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\WorkflowPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\PipelineDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\BatchProcessPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\MapCanvasWidget.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\BandManagerPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\BandCombinationDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ProductBandDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\RasterMetadataPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\SpectralProfileDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+        <ClCompile Include="ui\LayerPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="domain\WorkflowGraph.cpp">
+      <Filter>Domain</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\RadiometricServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\FusionServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\MosaicServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\WorkflowServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\BatchServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\LayerServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\GeometricServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\GdalRasterReader.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\GdalRasterWriter.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\JsonReportRepository.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\XmlWorkflowTemplateRepository.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\JsonProjectRepository.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\Sentinel2Product.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\LandsatProduct.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\GfProduct.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\DescriptorProduct.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\ApplicationController.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\PipelineExpander.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\TaskWorker.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\WorkerManager.cpp">
+      <Filter>Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\common\GeoTransformUtils.cpp">
+      <Filter>Algorithms\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\radiometric\DnToRadiance.cpp">
+      <Filter>Algorithms\Radiometric</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\radiometric\DnToReflectance.cpp">
+      <Filter>Algorithms\Radiometric</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\radiometric\AtmosphericCorrector.cpp">
+      <Filter>Algorithms\Radiometric</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\IhsFusion.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\BroveyFusion.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\GramSchmidtFusion.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\PcaFusion.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\HpfFusion.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\WaveletFusion.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\fusion\QualityMetricsEvaluator.cpp">
+      <Filter>Algorithms\Fusion</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\mosaic\HistogramMatcher.cpp">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\mosaic\SeamlineGenerator.cpp">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\mosaic\FeatheringBlender.cpp">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\mosaic\MosaicAssembler.cpp">
+      <Filter>Algorithms\Mosaic</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\geometric\GcpModelSolver.cpp">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\geometric\GcpMatcher.cpp">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\geometric\GeometricCorrector.cpp">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClCompile>
+    <ClCompile Include="algorithms\geometric\ResampleEngine.cpp">
+      <Filter>Algorithms\Geometric</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\RadiometricWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\FusionWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\MosaicWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\GeometricWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="resouce.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="mainwindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <CudaCompile Include="algorithms\geometric\cuda\ResampleKernels.cu">
+      <Filter>Algorithms\Geometric\Cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
+</Project>
