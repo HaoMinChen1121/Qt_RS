@@ -60,3 +60,7 @@ QtAPPDemo.vcxproj.user
 
 # Claude Code local settings
 .claude/
+
+# Runtime cache / user data
+gdalwmscache/
+user-history.db

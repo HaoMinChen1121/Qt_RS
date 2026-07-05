@@ -118,6 +118,9 @@
     <QtMoc Include="ui\BandCombinationDialog.h" />
     <QtMoc Include="ui\ProductBandDialog.h" />
     <QtMoc Include="ui\RasterMetadataPanel.h" />
+    <QtMoc Include="ui\VectorMetadataPanel.h" />
+    <QtMoc Include="ui\VectorStyleDialog.h" />
+    <QtMoc Include="ui\LegendPanel.h" />
     <QtMoc Include="ui\SpectralProfileDialog.h" />
   </ItemGroup>
   <ItemGroup>
@@ -129,6 +132,8 @@
     <!-- 领域对象 (纯头文件) -->
     <ClInclude Include="domain\BandConfiguration.h" />
     <ClInclude Include="domain\RasterImage.h" />
+    <ClInclude Include="domain\VectorLayerInfo.h" />
+    <ClInclude Include="domain\VectorStyle.h" />
     <ClInclude Include="domain\SensorInfo.h" />
     <ClInclude Include="domain\ProductDescriptor.h" />
     <ClInclude Include="domain\ProcessingTask.h" />
@@ -144,6 +149,7 @@
     <ClInclude Include="dataaccess\IWorkflowTemplateRepository.h" />
     <ClInclude Include="dataaccess\IProjectRepository.h" />
     <ClInclude Include="dataaccess\ISensorProduct.h" />
+    <ClInclude Include="dataaccess\IVectorReader.h" />
     <ClInclude Include="dataaccess\SensorProductFactory.h" />
     <!-- 数据访问实现 (纯头文件) -->
     <ClInclude Include="dataaccess\impl\GdalRasterReader.h" />
@@ -155,6 +161,7 @@
     <ClInclude Include="dataaccess\impl\LandsatProduct.h" />
     <ClInclude Include="dataaccess\impl\GfProduct.h" />
     <ClInclude Include="dataaccess\impl\DescriptorProduct.h" />
+    <ClInclude Include="dataaccess\impl\GdalVectorReader.h" />
     <QtMoc Include="controllers\workers\FusionWorker.h" />
     <QtMoc Include="controllers\workers\MosaicWorker.h" />
     <!-- 算法层：通用类型 (无 Q_OBJECT) -->
@@ -234,6 +241,9 @@
     <ClCompile Include="ui\BandCombinationDialog.cpp" />
     <ClCompile Include="ui\ProductBandDialog.cpp" />
     <ClCompile Include="ui\RasterMetadataPanel.cpp" />
+    <ClCompile Include="ui\VectorMetadataPanel.cpp" />
+    <ClCompile Include="ui\VectorStyleDialog.cpp" />
+    <ClCompile Include="ui\LegendPanel.cpp" />
     <ClCompile Include="ui\SpectralProfileDialog.cpp" />
     <!-- 领域对象实现 -->
     <ClCompile Include="domain\WorkflowGraph.cpp" />
@@ -255,6 +265,7 @@
     <ClCompile Include="dataaccess\impl\LandsatProduct.cpp" />
     <ClCompile Include="dataaccess\impl\GfProduct.cpp" />
     <ClCompile Include="dataaccess\impl\DescriptorProduct.cpp" />
+    <ClCompile Include="dataaccess\impl\GdalVectorReader.cpp" />
     <!-- 控制器实现 -->
     <ClCompile Include="controllers\ApplicationController.cpp" />
     <ClCompile Include="controllers\PipelineExpander.cpp" />

@@ -21,9 +21,13 @@ public:
     QString originalPath() const override;
 
 private:
+    bool openFromTar(const QString& tarPath);
+    SensorInfo parseMtlData(const QByteArray& data);
     SensorInfo parseMtl(const QString& mtlPath);
+    static QByteArray readTextFile(const QString& vsiPath);
 
     QString            mOriginalPath;
+    QString            mRootPath;        // /vsitar/... 根路径
     QList<RasterBandDescriptor> mBands;
     SensorInfo         mSensorInfo;
     QString            mSensorType;

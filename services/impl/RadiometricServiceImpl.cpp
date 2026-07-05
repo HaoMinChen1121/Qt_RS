@@ -92,6 +92,19 @@ void RadiometricServiceImpl::execute(const RadiometricCorrectionParams& params)
                     }
                 }
 
+                // 检查 /vsitar/ 格式：从虚拟路径提取原始 .tar 路径
+                if (!found && metaPath.startsWith("/vsitar/"))
+                {
+                    QString inner = metaPath.mid(QStringLiteral("/vsitar/").length());
+                    int sepIdx = inner.indexOf('/');
+                    if (sepIdx > 0)
+                    {
+                        QString tarPath = inner.left(sepIdx);
+                        info = tryOpenProduct(tarPath);
+                        if (!info.bands.isEmpty()) found = true;
+                    }
+                }
+
                 // 检查 /vsizip/ 格式：从完整路径中提取 ZIP 路径
                 if (!found && metaPath.startsWith("/vsizip/"))
                 {

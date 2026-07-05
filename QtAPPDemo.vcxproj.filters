@@ -118,6 +118,15 @@
     <QtMoc Include="ui\RasterMetadataPanel.h">
       <Filter>UI</Filter>
     </QtMoc>
+    <QtMoc Include="ui\VectorMetadataPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\VectorStyleDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\LegendPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
     <QtMoc Include="ui\SpectralProfileDialog.h">
       <Filter>UI</Filter>
     </QtMoc>
@@ -215,6 +224,12 @@
     <ClInclude Include="domain\RasterImage.h">
       <Filter>Domain</Filter>
     </ClInclude>
+    <ClInclude Include="domain\VectorLayerInfo.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\VectorStyle.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
     <ClInclude Include="domain\SensorInfo.h">
       <Filter>Domain</Filter>
     </ClInclude>
@@ -258,6 +273,9 @@
       <Filter>DataAccess</Filter>
     </ClInclude>
     <ClInclude Include="dataaccess\SensorProductFactory.h">
+      <Filter>DataAccess</Filter>
+    </ClInclude>
+    <ClInclude Include="dataaccess\IVectorReader.h">
       <Filter>DataAccess</Filter>
     </ClInclude>
     <ClInclude Include="algorithms\common\AlgorithmResult.h">
@@ -356,6 +374,9 @@
     <ClInclude Include="dataaccess\impl\DescriptorProduct.h">
       <Filter>DataAccess\Impl</Filter>
     </ClInclude>
+    <ClInclude Include="dataaccess\impl\GdalVectorReader.h">
+      <Filter>DataAccess\Impl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -401,6 +422,15 @@
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="ui\RasterMetadataPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\VectorMetadataPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\VectorStyleDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\LegendPanel.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="ui\SpectralProfileDialog.cpp">
@@ -458,6 +488,9 @@
       <Filter>DataAccess\Impl</Filter>
     </ClCompile>
     <ClCompile Include="dataaccess\impl\DescriptorProduct.cpp">
+      <Filter>DataAccess\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="dataaccess\impl\GdalVectorReader.cpp">
       <Filter>DataAccess\Impl</Filter>
     </ClCompile>
     <ClCompile Include="controllers\ApplicationController.cpp">

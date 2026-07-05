@@ -88,6 +88,7 @@ public:
 
 signals:
     void layerAddRequested(const QStringList& filePaths);
+    void vectorLayerAddRequested(const QStringList& filePaths);
     void layerRemoveRequested(const QStringList& layerIds);
     void layerVisibilityChanged(const QString& layerId, bool visible);
     void layerOrderChanged(const QStringList& orderedIds);
@@ -98,10 +99,12 @@ signals:
     void bandManagerRequested(const QString& layerId);
     void bandManagerToggleRequested();
     void exportLayerRequested(const QString& layerId);
+    void vectorStyleRequested(const QString& layerId);
     void opacityChanged(const QString& layerId, double opacity);
 
 public slots:
     void onLayerLoaded(const QString& layerId, const QString& name, const QString& type);
+    void onVectorLayerLoaded(const QString& layerId, const QString& name, const QString& geometryType);
     void onLayerRemoved(const QString& layerId);
     void onLayerError(const QString& layerId, const QString& errorMsg);
     void onLayerVisibilitySet(const QString& layerId, bool visible);
@@ -111,6 +114,7 @@ public slots:
 
 public slots:
     void onAddLayer();
+    void onAddVectorLayer();
 
 private slots:
     void onRemoveLayer();
@@ -132,6 +136,7 @@ private:
     QToolBar* mToolBar;
 
     QAction* mAddAction;
+    QAction* mAddVectorAction;
     QAction* mRemoveAction;
     QAction* mMoveUpAction;
     QAction* mMoveDownAction;

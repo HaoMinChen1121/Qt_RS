@@ -19,7 +19,9 @@
 #include "ui/MapCanvasWidget.h"
 #include "ui/LayerPanel.h"
 #include "ui/RasterMetadataPanel.h"
+#include "ui/VectorMetadataPanel.h"
 #include "ui/BandManagerPanel.h"
+#include <QStackedWidget>
 // 表示层 — 仅工作流/批处理保留嵌入式面板
 #include "ui/WorkflowPanel.h"
 #include "ui/BatchProcessPanel.h"
@@ -128,6 +130,18 @@ void MainWindow::initMapCanvas()
     // mMapCanvasWidget->setCanvasExtent(...)
 }
 
+void MainWindow::showRasterMetadata()
+{
+    if (mMetadataStack)
+        mMetadataStack->setCurrentIndex(0);
+}
+
+void MainWindow::showVectorMetadata()
+{
+    if (mMetadataStack)
+        mMetadataStack->setCurrentIndex(1);
+}
+
 void MainWindow::initLayerPanel()
 {
     mLayerDock = new QDockWidget(tr("图层"), this);
@@ -143,7 +157,7 @@ void MainWindow::initLayerPanel()
 
 void MainWindow::initMetadataPanel()
 {
-    mMetadataDock = new QDockWidget(tr("影像元数据"), this);
+    mMetadataDock = new QDockWidget(tr("元数据"), this);
     mMetadataDock->setObjectName("MetadataDock");
     mMetadataDock->setAllowedAreas(Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
     mMetadataDock->setFeatures(QDockWidget::DockWidgetMovable |
@@ -151,8 +165,13 @@ void MainWindow::initMetadataPanel()
     mMetadataDock->setMinimumWidth(180);
     mMetadataDock->setMaximumWidth(500);
 
-    mMetadataPanel = new RasterMetadataPanel(mMetadataDock);
-    mMetadataDock->setWidget(mMetadataPanel);
+    mMetadataStack = new QStackedWidget(mMetadataDock);
+    mMetadataPanel = new RasterMetadataPanel(mMetadataStack);
+    mVectorMetadataPanel = new VectorMetadataPanel(mMetadataStack);
+    mMetadataStack->addWidget(mMetadataPanel);       // index 0
+    mMetadataStack->addWidget(mVectorMetadataPanel);  // index 1
+    mMetadataStack->setCurrentIndex(0);               // default: raster
+    mMetadataDock->setWidget(mMetadataStack);
 
     addDockWidget(Qt::RightDockWidgetArea, mMetadataDock);
 
@@ -202,8 +221,8 @@ void MainWindow::createCategoryFile(SARibbonCategory* page)
     pnlSensor->addLargeAction(actOpenLS);
     connect(actOpenLS, &QAction::triggered, this, [this]()
     {
-        QString file = QFileDialog::getOpenFileName(this, tr("选择 Landsat 元数据文件"),
-            QString(), tr("Landsat 元数据 (*_MTL.txt);;所有文件 (*.*)"));
+        QString file = QFileDialog::getOpenFileName(this, tr("选择 Landsat 数据文件"),
+            QString(), tr("Landsat 数据 (*_MTL.txt *.tar *.rpp);;所有文件 (*.*)"));
         if (!file.isEmpty() && mLayerPanel)
             emit mLayerPanel->layerAddRequested({file});
     });
@@ -226,6 +245,14 @@ void MainWindow::createCategoryFile(SARibbonCategory* page)
     {
         if (mLayerPanel)
             mLayerPanel->onAddLayer();
+    });
+
+    QAction* actOpenVector = createAction(tr("添加通用\n矢量图层"), ":/icon/icon/item.svg", "actAddVector");
+    pnlGeneral->addLargeAction(actOpenVector);
+    connect(actOpenVector, &QAction::triggered, this, [this]()
+    {
+        if (mLayerPanel)
+            mLayerPanel->onAddVectorLayer();
     });
 
     pnlSensor->setVisible(true);
@@ -282,7 +309,7 @@ void MainWindow::createCategoryRadiometric(SARibbonCategory* page)
                 QString(), tr("Sentinel-2 产品 (*.zip *.rpp *.SAFE);;所有文件 (*.*)"));
         else if (sensor.startsWith("Landsat"))
             path = QFileDialog::getOpenFileName(this, tr("选择 Landsat 元数据"),
-                QString(), tr("Landsat 元数据 (*_MTL.txt);;所有文件 (*.*)"));
+                QString(), tr("Landsat 数据 (*_MTL.txt *.tar *.rpp);;所有文件 (*.*)"));
         else if (sensor.startsWith("GF-"))
             path = QFileDialog::getExistingDirectory(this, tr("选择高分影像目录"));
         else
@@ -326,7 +353,7 @@ void MainWindow::createCategoryRadiometric(SARibbonCategory* page)
                 QString(), tr("Sentinel-2 产品 (*.zip *.rpp *.SAFE);;所有文件 (*.*)"));
         else if (sensor.startsWith("Landsat"))
             path = QFileDialog::getOpenFileName(this, tr("选择 Landsat 元数据"),
-                QString(), tr("Landsat 元数据 (*_MTL.txt);;所有文件 (*.*)"));
+                QString(), tr("Landsat 数据 (*_MTL.txt *.tar *.rpp);;所有文件 (*.*)"));
         else
             path = QFileDialog::getOpenFileName(this, tr("选择元数据文件"),
                 QString(), tr("元数据文件 (*.xml *.txt);;所有文件 (*.*)"));

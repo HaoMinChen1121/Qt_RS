@@ -39,6 +39,14 @@ inline ISensorProduct* createSensorProduct(const QString& path)
     // ── Landsat ──
     if (fi.isFile() && fi.fileName().endsWith("_MTL.txt", Qt::CaseInsensitive))
         return new LandsatProduct();
+    // Landsat Collection 2 tar 归档
+    if (path.endsWith(".tar", Qt::CaseInsensitive))
+    {
+        QString fn = fi.completeBaseName();
+        if (fn.startsWith("LC0") || fn.startsWith("LO0") ||
+            fn.startsWith("LM0") || fn.startsWith("LT0"))
+            return new LandsatProduct();
+    }
     if (fi.isDir())
     {
         QStringList mtl = QDir(path).entryList({"*_MTL.txt"}, QDir::Files);

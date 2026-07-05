@@ -20,8 +20,10 @@ class BatchProcessPanel;
 
 class LayerPanel;
 class RasterMetadataPanel;
+class VectorMetadataPanel;
 class BandManagerPanel;
 class QDockWidget;
+class QStackedWidget;
 class SpectralProfileDialog;
 
 class ApplicationController;
@@ -49,7 +51,12 @@ public:
     // 访问器方法（供 ApplicationController 连接信号/槽）
     LayerPanel* layerPanel() const { return mLayerPanel; }
     RasterMetadataPanel* metadataPanel() const { return mMetadataPanel; }
+    VectorMetadataPanel* vectorMetadataPanel() const { return mVectorMetadataPanel; }
     BandManagerPanel* bandManagerPanel() const { return mBandManagerPanel; }
+
+    // 元数据面板切换
+    void showRasterMetadata();
+    void showVectorMetadata();
     MapCanvasWidget* mapCanvasWidget() const { return mMapCanvasWidget; }
     SpectralProfileDialog* spectralDialog() const { return mSpectralDialog; }
     void setAppController(ApplicationController* ctrl) { mAppController = ctrl; }
@@ -90,7 +97,9 @@ private:
     QDockWidget* mLayerDock = nullptr;
     LayerPanel* mLayerPanel = nullptr;
     QDockWidget* mMetadataDock = nullptr;
+    QStackedWidget* mMetadataStack = nullptr;
     RasterMetadataPanel* mMetadataPanel = nullptr;
+    VectorMetadataPanel* mVectorMetadataPanel = nullptr;
     BandManagerPanel* mBandManagerPanel = nullptr;
 
 private Q_SLOTS:

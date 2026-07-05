@@ -6,7 +6,11 @@
 #include <QRectF>
 #include <QList>
 #include <QPair>
+
+class QgsMapLayer;
 #include "domain/RasterImage.h"
+#include "domain/VectorLayerInfo.h"
+#include "domain/VectorStyle.h"
 #include "domain/SensorInfo.h"
 #include "domain/BandConfiguration.h"
 
@@ -55,6 +59,12 @@ public:
     virtual bool reconfigureRgb(const QString& layerId,
                                 const BandConfiguration& cfg) = 0;
 
+    // 矢量图层
+    virtual QStringList addVectorLayers(const QStringList& filePaths) = 0;
+    virtual VectorLayerInfo vectorLayerInfo(const QString& layerId) const = 0;
+    virtual void setVectorStyle(const QString& layerId, const VectorStyleConfig& style) = 0;
+    virtual QgsMapLayer* mapLayer(const QString& layerId) const = 0;
+
     // 导出
     virtual bool exportLayer(const QString& layerId, const QString& outputPath,
                               const ExportOptions& options = ExportOptions()) = 0;
@@ -64,6 +74,8 @@ signals:
     void layerRemoved(const QString& layerId);
     void layerError(const QString& layerId, const QString& errorMessage);
     void renderLayersChanged(const QList<RasterImage>& layers);
+    void vectorLayerLoaded(const QString& layerId, const QString& name, const QString& geometryType);
+    void vectorRenderLayersChanged(const QList<VectorLayerInfo>& layers);
 };
 
 #endif // ILAYERSERVICE_H

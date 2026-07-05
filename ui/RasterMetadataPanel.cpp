@@ -17,7 +17,6 @@ void RasterMetadataPanel::setupUI()
     auto* outerLayout = new QVBoxLayout(this);
     outerLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Wrap content in a scroll area so small docks remain usable
     auto* scroll = new QScrollArea(this);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
@@ -59,6 +58,7 @@ void RasterMetadataPanel::setupUI()
     mLblDatum      = makeLabel();
     mLblNoData     = makeLabel();
     mLblFilePath   = makeLabel();
+    mLblLatLon     = makeLabel();
 
     form->addRow(QStringLiteral("影像名称:"), mLblDataset);
     form->addRow(QStringLiteral("波段数量:"), mLblBandCount);
@@ -68,6 +68,7 @@ void RasterMetadataPanel::setupUI()
     form->addRow(QStringLiteral("投影信息:"), mLblProjection);
     form->addRow(QStringLiteral("基准面:"),   mLblDatum);
     form->addRow(QStringLiteral("忽略值:"),   mLblNoData);
+    form->addRow(QStringLiteral("经纬度范围 (WGS84):"), mLblLatLon);
     form->addRow(QStringLiteral("文件路径:"), mLblFilePath);
 
     mainLayout->addLayout(form);
@@ -82,7 +83,9 @@ void RasterMetadataPanel::showMetadata(const QString& layerId,
                                         const QString& projection, int epsg,
                                         double pixelX, double pixelY,
                                         const QString& datum, double noData,
-                                        const QString& dataType, const QString& filePath)
+                                        const QString& dataType, const QString& filePath,
+                                        const QString& latLonDms,
+                                        const QString& latLonDecimal)
 {
     mLblDataset->setText(displayName.isEmpty() ? layerId : displayName);
     mLblBandCount->setText(QString::number(bandCount));
@@ -104,6 +107,19 @@ void RasterMetadataPanel::showMetadata(const QString& layerId,
 
     mLblDatum->setText(datum.isEmpty() ? QStringLiteral("--") : datum);
     mLblNoData->setText(QString::number(noData));
+
+    if (!latLonDms.isEmpty())
+    {
+        if (!latLonDecimal.isEmpty())
+            mLblLatLon->setText(latLonDms + QStringLiteral("\n") + latLonDecimal);
+        else
+            mLblLatLon->setText(latLonDms);
+    }
+    else
+    {
+        mLblLatLon->setText(QStringLiteral("无法计算 (缺少投影信息)"));
+    }
+
     mLblFilePath->setText(filePath);
 }
 
@@ -118,4 +134,5 @@ void RasterMetadataPanel::clear()
     mLblDatum->setText(QStringLiteral("--"));
     mLblNoData->setText(QStringLiteral("--"));
     mLblFilePath->setText(QStringLiteral("--"));
+    mLblLatLon->setText(QStringLiteral("--"));
 }

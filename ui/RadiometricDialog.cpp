@@ -1,4 +1,6 @@
 #include "RadiometricDialog.h"
+#include "dataaccess/ISensorProduct.h"
+#include "dataaccess/SensorProductFactory.h"
 
 #include <QComboBox>
 #include <QLineEdit>
@@ -17,6 +19,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QDialogButtonBox>
+#include <QScopedPointer>
 
 RadiometricDialog::RadiometricDialog(QWidget* parent)
     : QDialog(parent)
@@ -346,14 +349,36 @@ void RadiometricDialog::onAddInputFile()
     QStringList files = QFileDialog::getOpenFileNames(
         this, tr("选择遥感影像文件"),
         QString(),
-        tr("所有支持格式 (*.zip *.SAFE *_MTL.txt *.tif *.tiff *.img *.dat *.hdr);;"
+        tr("所有支持格式 (*.zip *.SAFE *_MTL.txt *.tar *.tif *.tiff *.img *.dat *.hdr);;"
            "Sentinel-2 (*.zip *.SAFE);;"
-           "Landsat (*_MTL.txt);;"
+           "Landsat (*_MTL.txt *.tar);;"
            "通用栅格 (*.tif *.tiff *.img);;所有文件 (*.*)")
     );
     for (const auto& f : files)
     {
-        mInputFileList->addItem(f);
+        // 对传感器产品归档（tar/zip/SAFE/MTL目录）自动展开为波段文件
+        QScopedPointer<ISensorProduct> prod(createSensorProduct(f));
+        if (prod && prod->open(f))
+        {
+            const auto bands = prod->bands();
+            for (const auto& b : bands)
+                mInputFileList->addItem(b.rasterPath);
+
+            // 自动填充元数据路径和传感器信息
+            if (mMetadataPath->text().isEmpty())
+                mMetadataPath->setText(f);
+            setSensorInfo(prod->sensorInfo());
+
+            // 根据传感器类型自动选择下拉框
+            QString st = prod->sensorType();
+            int idx = mSensorCombo->findText(st, Qt::MatchContains);
+            if (idx >= 0)
+                mSensorCombo->setCurrentIndex(idx);
+        }
+        else
+        {
+            mInputFileList->addItem(f);
+        }
     }
 }
 

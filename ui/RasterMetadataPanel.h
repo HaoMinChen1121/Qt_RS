@@ -19,7 +19,9 @@ public slots:
                       const QString& projection, int epsg,
                       double pixelX, double pixelY,
                       const QString& datum, double noData,
-                      const QString& dataType, const QString& filePath);
+                      const QString& dataType, const QString& filePath,
+                      const QString& latLonDms = {},
+                      const QString& latLonDecimal = {});
     void clear();
 
 private:
@@ -34,6 +36,7 @@ private:
     QLabel* mLblDataType;
     QLabel* mLblFilePath;
     QLabel* mLblBandCount;
+    QLabel* mLblLatLon;
 };
 
 #endif // RASTERMETADATAPANEL_H

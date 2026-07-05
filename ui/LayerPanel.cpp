@@ -76,7 +76,8 @@ void LayerPanel::setupUI()
 
 void LayerPanel::createActions()
 {
-    mAddAction = mToolBar->addAction(QIcon(":/icon/icon/save.svg"), tr("添加图层"));
+    mAddAction = mToolBar->addAction(QIcon(":/icon/icon/save.svg"), tr("添加栅格图层"));
+    mAddVectorAction = mToolBar->addAction(QIcon(":/icon/icon/item.svg"), tr("添加矢量图层"));
     mRemoveAction = mToolBar->addAction(QIcon(":/icon/icon/delete.svg"), tr("移除图层"));
     mToolBar->addSeparator();
     mMoveUpAction = mToolBar->addAction(QIcon(":/icon/icon/undo.svg"), tr("上移"));
@@ -88,6 +89,7 @@ void LayerPanel::createActions()
     mBandManagerAction->setCheckable(true);
 
     connect(mAddAction, &QAction::triggered, this, &LayerPanel::onAddLayer);
+    connect(mAddVectorAction, &QAction::triggered, this, &LayerPanel::onAddVectorLayer);
     connect(mRemoveAction, &QAction::triggered, this, &LayerPanel::onRemoveLayer);
     connect(mMoveUpAction, &QAction::triggered, this, &LayerPanel::onMoveLayerUp);
     connect(mMoveDownAction, &QAction::triggered, this, &LayerPanel::onMoveLayerDown);
@@ -147,6 +149,21 @@ void LayerPanel::onLayerLoaded(const QString& layerId, const QString& name, cons
     mLayerTree->setCurrentItem(item);
 }
 
+void LayerPanel::onVectorLayerLoaded(const QString& layerId, const QString& name, const QString& geometryType)
+{
+    if (findItem(layerId)) return;
+
+    auto* item = new QTreeWidgetItem();
+    item->setData(0, Qt::UserRole, layerId);
+    item->setCheckState(0, Qt::Checked);
+    item->setText(1, name);
+    item->setText(2, QStringLiteral("V: %1").arg(geometryType));
+    item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+
+    mLayerTree->insertTopLevelItem(0, item);
+    mLayerTree->setCurrentItem(item);
+}
+
 void LayerPanel::onLayerRemoved(const QString& layerId)
 {
     QTreeWidgetItem* item = findItem(layerId);
@@ -184,9 +201,9 @@ void LayerPanel::onAddLayer()
 {
     QStringList files = QFileDialog::getOpenFileNames(
         this,
-        tr("选择图层文件"),
+        tr("选择栅格图层文件"),
         QString(),
-        tr("所有支持格式 (*.zip *.SAFE *_MTL.txt *.tif *.tiff *.img);;"
+        tr("所有栅格格式 (*.zip *.SAFE *_MTL.txt *.tif *.tiff *.img);;"
            "Sentinel-2 (*.zip *.SAFE);;"
            "Landsat (*_MTL.txt);;"
            "通用栅格 (*.tif *.tiff *.img);;"
@@ -194,6 +211,26 @@ void LayerPanel::onAddLayer()
     if (!files.isEmpty())
     {
         emit layerAddRequested(files);
+    }
+}
+
+void LayerPanel::onAddVectorLayer()
+{
+    QStringList files = QFileDialog::getOpenFileNames(
+        this,
+        tr("选择矢量图层文件"),
+        QString(),
+        tr("所有矢量格式 (*.shp *.geojson *.gpkg *.kml *.kmz *.dxf *.gml *.tab *.mif);;"
+           "Shapefile (*.shp);;"
+           "GeoJSON (*.geojson *.json);;"
+           "GeoPackage (*.gpkg);;"
+           "KML/KMZ (*.kml *.kmz);;"
+           "AutoCAD DXF (*.dxf);;"
+           "MapInfo (*.tab *.mif);;"
+           "所有文件 (*.*)"));
+    if (!files.isEmpty())
+    {
+        emit vectorLayerAddRequested(files);
     }
 }
 
@@ -273,10 +310,17 @@ void LayerPanel::onContextMenu(const QPoint& pos)
 
     QString layerId = item->data(0, Qt::UserRole).toString();
     mContextLayerId = layerId;
+    bool isVector = layerId.startsWith(QStringLiteral("vec_"));
 
     QMenu menu(this);
     QAction* actZoom      = menu.addAction(tr("缩放到图层"));
     menu.addSeparator();
+    QAction* actStyle     = nullptr;
+    if (isVector)
+    {
+        actStyle = menu.addAction(tr("样式设置..."));
+        menu.addSeparator();
+    }
     QAction* actExport    = menu.addAction(tr("导出图层..."));
     menu.addSeparator();
     QAction* actRemove    = menu.addAction(tr("移除图层"));
@@ -288,6 +332,10 @@ void LayerPanel::onContextMenu(const QPoint& pos)
     if (selected == actZoom)
     {
         emit zoomToLayerRequested(layerId);
+    }
+else if (selected == actStyle)
+{
+    emit vectorStyleRequested(layerId);
     }
 else if (selected == actRemove)
 {

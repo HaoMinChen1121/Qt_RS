@@ -1,5 +1,6 @@
 #include "MosaicAssembler.h"
 #include "HistogramMatcher.h"
+#include "SeamlineGenerator.h"
 #include <gdal_priv.h>
 #include <ogr_srs_api.h>
 #include <cmath>
@@ -577,6 +578,34 @@ AlgorithmResult MosaicAssembler::assemble(const MosaicParams& params,
     }
 
     GDALClose(outDS);
+
+    // ── 6. 生成镶嵌线矢量文件 ──
+    if (params.seamlineMethod != QStringLiteral("None"))
+    {
+        if (progress)
+            progress(96, QStringLiteral("Generating seamline vectors..."));
+
+        double seamRes = (resX + resY) * 0.5;
+        double seamExt[4] = {outExt[0], outExt[1], outExt[2], outExt[3]};
+
+        SeamlineMask seamMask = SeamlineGenerator::generateVoronoi(
+            images, seamExt, seamRes);
+
+        QFileInfo fi(params.outputPath);
+        QString shpPath = fi.absolutePath() + "/" + fi.completeBaseName()
+                          + "_seamlines.shp";
+
+        if (SeamlineGenerator::exportSeamlinesToShapefile(seamMask, images, shpPath))
+        {
+            qDebug() << "[Mosaic] Seamline shapefile written to:" << shpPath;
+        }
+        else
+        {
+            qWarning() << "[Mosaic] Failed to generate seamline shapefile";
+        }
+
+        seamMask.release();
+    }
 
     if (progress)
         progress(100, QStringLiteral("Mosaic complete"));

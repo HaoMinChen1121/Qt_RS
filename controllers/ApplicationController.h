@@ -16,6 +16,7 @@ class ILayerService;
 // Data access interfaces
 class IRasterReader;
 class IRasterWriter;
+class IVectorReader;
 class IProcessingReportRepository;
 class IWorkflowTemplateRepository;
 class IProjectRepository;
@@ -66,6 +67,7 @@ private:
     // Data access implementations (owned)
     std::unique_ptr<IRasterReader>              mRasterReader;
     std::unique_ptr<IRasterWriter>              mRasterWriter;
+    std::unique_ptr<IVectorReader>              mVectorReader;
     std::unique_ptr<IProcessingReportRepository> mReportRepo;
     std::unique_ptr<IWorkflowTemplateRepository> mWorkflowRepo;
     std::unique_ptr<IProjectRepository>         mProjectRepo;

@@ -5,7 +5,10 @@
 #include <QRegularExpression>
 #include <QDateTime>
 #include <QDebug>
+#include <QProcess>
 #include <algorithm>
+#include <cpl_vsi.h>
+#include <gdal_priv.h>
 
 bool LandsatProduct::open(const QString& path)
 {
@@ -19,6 +22,10 @@ bool LandsatProduct::open(const QString& path)
     }
 
     mOriginalPath = fi.absoluteFilePath();
+
+    // ── .tar 归档 ──
+    if (path.endsWith(".tar", Qt::CaseInsensitive))
+        return openFromTar(mOriginalPath);
 
     // 查找 MTL 文件和工作目录
     QString mtlPath;
@@ -105,6 +112,7 @@ void LandsatProduct::close()
     mSensorInfo = SensorInfo();
     mSensorType.clear();
     mProductId.clear();
+    mRootPath.clear();
     mOpen = false;
 }
 
@@ -129,28 +137,161 @@ QString LandsatProduct::productId()    const { return mProductId; }
 QString LandsatProduct::previewImagePath() const { return {}; }
 QString LandsatProduct::originalPath() const { return mOriginalPath; }
 
-// ─── MTL parser (复用 SensorMetadataProvider 的逻辑) ────────────────────────
+// ─── Tar archive open ───────────────────────────────────────────────────────
 
-SensorInfo LandsatProduct::parseMtl(const QString& mtlPath)
+QByteArray LandsatProduct::readTextFile(const QString& vsiPath)
+{
+    VSILFILE* fp = VSIFOpenExL(vsiPath.toUtf8().constData(), "rb", FALSE);
+    if (!fp)
+    {
+        qWarning() << "[LandsatProduct] VSIFOpenExL failed:" << vsiPath;
+        return {};
+    }
+    VSIFSeekL(fp, 0, SEEK_END);
+    long size = VSIFTellL(fp);
+    VSIFSeekL(fp, 0, SEEK_SET);
+    QByteArray data(size, Qt::Uninitialized);
+    VSIFReadL(data.data(), 1, static_cast<size_t>(size), fp);
+    VSIFCloseL(fp);
+    return data;
+}
+
+bool LandsatProduct::openFromTar(const QString& tarPath)
+{
+    GDALAllRegister();
+    mRootPath = QStringLiteral("/vsitar/") + tarPath;
+
+    // 用 tar -tf 发现文件列表
+    QStringList tarFiles;
+    QProcess proc;
+    proc.start(QStringLiteral("tar"), {QStringLiteral("-tf"), tarPath});
+    if (proc.waitForFinished(15000) && proc.exitCode() == 0)
+    {
+        QString output = QString::fromUtf8(proc.readAllStandardOutput());
+        tarFiles = output.split('\n', Qt::SkipEmptyParts);
+    }
+
+    // 如果 tar 命令不可用或失败，回退到基于产品 ID 的命名推断
+    QFileInfo fi(tarPath);
+    QString productId = fi.completeBaseName();
+
+    // 查找 MTL 文件: 优先从 tar 列表中找，否则尝试产品名推断
+    QString mtlVsiPath;
+    QString mtlFileName;
+    if (!tarFiles.isEmpty())
+    {
+        for (const QString& f : tarFiles)
+        {
+            QString trim = f.trimmed();
+            if (trim.endsWith("_MTL.txt", Qt::CaseInsensitive))
+            {
+                mtlFileName = trim;
+                mtlVsiPath = mRootPath + QStringLiteral("/") + trim;
+                break;
+            }
+        }
+    }
+    if (mtlVsiPath.isEmpty())
+    {
+        mtlFileName = productId + QStringLiteral("_MTL.txt");
+        mtlVsiPath = mRootPath + QStringLiteral("/") + mtlFileName;
+    }
+
+    // 读取并解析 MTL
+    QByteArray mtlData = readTextFile(mtlVsiPath);
+    if (mtlData.isEmpty())
+    {
+        qWarning() << "[LandsatProduct] failed to read MTL from tar:" << mtlVsiPath;
+        return false;
+    }
+
+    mSensorInfo = parseMtlData(mtlData);
+    mSensorInfo.sensorType = mSensorType;
+    mSensorInfo.sensorId   = mSensorType;
+
+    // 构建波段描述符 — 使用 /vsitar/ 虚拟路径
+    auto addBand = [&](int num, const char* name, double res, double wlMin, double wlMax)
+    {
+        // 在 tar 列表中查找该波段文件
+        QString bandPath;
+        QString zeroPad = QStringLiteral("_B%1.").arg(num, 2, 10, QChar('0'));
+        QString noPad   = QStringLiteral("_B%1.").arg(num);
+
+        if (!tarFiles.isEmpty())
+        {
+            for (const QString& f : tarFiles)
+            {
+                if (f.contains(zeroPad, Qt::CaseInsensitive) || f.contains(noPad, Qt::CaseInsensitive))
+                {
+                    bandPath = mRootPath + QStringLiteral("/") + f.trimmed();
+                    break;
+                }
+            }
+        }
+        if (bandPath.isEmpty())
+        {
+            QString guess = mRootPath + QStringLiteral("/") + productId + zeroPad + QStringLiteral("TIF");
+            bandPath = guess;
+        }
+
+        RasterBandDescriptor desc;
+        desc.physicalBand = num;
+        desc.bandName     = QString::fromLatin1(name);
+        desc.rasterPath   = bandPath;
+        desc.resolution   = res;
+        desc.dataType     = QStringLiteral("UInt16");
+        mBands.append(desc);
+    };
+
+    struct BandDef { int num; const char* name; double wlMin; double wlMax; double res; };
+    static const BandDef defs[] = {
+        {1,  "Coastal/Aerosol", 0.433, 0.453, 30.0},
+        {2,  "Blue",            0.450, 0.515, 30.0},
+        {3,  "Green",           0.525, 0.600, 30.0},
+        {4,  "Red",             0.630, 0.680, 30.0},
+        {5,  "NIR",             0.845, 0.885, 30.0},
+        {6,  "SWIR-1",          1.560, 1.660, 30.0},
+        {7,  "SWIR-2",          2.100, 2.300, 30.0},
+        {8,  "Pan",             0.500, 0.680, 15.0},
+        {9,  "Cirrus",          1.360, 1.390, 30.0},
+        {10, "TIRS-1",          10.60, 11.19, 100.0},
+        {11, "TIRS-2",          11.50, 12.51, 100.0},
+    };
+
+    for (const auto& bd : defs)
+        addBand(bd.num, bd.name, bd.res, bd.wlMin, bd.wlMax);
+
+    std::sort(mBands.begin(), mBands.end(),
+              [](const RasterBandDescriptor& a, const RasterBandDescriptor& b)
+              {
+                  return a.physicalBand < b.physicalBand;
+              });
+
+    mProductId = productId;
+    mOpen = true;
+    qDebug() << "[LandsatProduct] opened TAR product:" << mProductId
+             << "bands:" << mBands.size() << "sensor:" << mSensorType;
+    return true;
+}
+
+// ─── MTL parser ─────────────────────────────────────────────────────────────
+
+SensorInfo LandsatProduct::parseMtlData(const QByteArray& data)
 {
     SensorInfo info;
 
-    QFile file(mtlPath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return info;
-
     QMap<QString, QString> kv;
     QRegularExpression kvRx(R"(^\s*([A-Za-z_0-9]+)\s*=\s*(.+?)\s*$)");
-    while (!file.atEnd())
+    const auto lines = data.split('\n');
+    for (const QByteArray& raw : lines)
     {
-        const QString line = QString::fromUtf8(file.readLine()).trimmed();
+        QString line = QString::fromUtf8(raw).trimmed();
         if (line.isEmpty() || line.startsWith("GROUP") || line.startsWith("END_GROUP"))
             continue;
         QRegularExpressionMatch m = kvRx.match(line);
         if (m.hasMatch())
             kv.insert(m.captured(1), m.captured(2).remove('"'));
     }
-    file.close();
 
     mSensorType = "Landsat-";
     QString sensorId = kv.value("SPACECRAFT_ID", kv.value("SENSOR_ID"));
@@ -201,4 +342,15 @@ SensorInfo LandsatProduct::parseMtl(const QString& mtlPath)
     }
 
     return info;
+}
+
+SensorInfo LandsatProduct::parseMtl(const QString& mtlPath)
+{
+    QFile file(mtlPath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return {};
+
+    QByteArray data = file.readAll();
+    file.close();
+    return parseMtlData(data);
 }

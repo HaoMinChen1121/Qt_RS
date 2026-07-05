@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
     a.setFont(f);
     QElapsedTimer cost;
 
+    CPLSetConfigOption("GDAL_FILENAME_IS_UTF8", "YES");
     GDALAllRegister();
 
     // Suppress known harmless GDAL warnings from OpenJPEG driver parsing

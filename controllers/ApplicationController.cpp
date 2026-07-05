@@ -17,6 +17,7 @@
 #include "dataaccess/SensorProductFactory.h"
 #include "dataaccess/impl/GdalRasterReader.h"
 #include "dataaccess/impl/GdalRasterWriter.h"
+#include "dataaccess/impl/GdalVectorReader.h"
 #include "dataaccess/impl/JsonReportRepository.h"
 #include "dataaccess/impl/XmlWorkflowTemplateRepository.h"
 #include "dataaccess/impl/JsonProjectRepository.h"
@@ -28,8 +29,9 @@
 #include "mainwindow.h"
 #include "ui/SpectralProfileDialog.h"
 #include "ui/LayerPanel.h"
-#include "ui/LayerPanel.h"
 #include "ui/RasterMetadataPanel.h"
+#include "ui/VectorMetadataPanel.h"
+#include "ui/VectorStyleDialog.h"
 #include "ui/MapCanvasWidget.h"
 #include "ui/BandManagerPanel.h"
 #include "ui/BandCombinationDialog.h"
@@ -98,6 +100,7 @@ void ApplicationController::createDataAccess()
 {
     mRasterReader     = std::make_unique<GdalRasterReader>();
     mRasterWriter     = std::make_unique<GdalRasterWriter>();
+    mVectorReader     = std::make_unique<GdalVectorReader>();
     mReportRepo       = std::make_unique<JsonReportRepository>();
     mWorkflowRepo     = std::make_unique<XmlWorkflowTemplateRepository>();
     mProjectRepo      = std::make_unique<JsonProjectRepository>();
@@ -116,7 +119,7 @@ void ApplicationController::createServices()
         mFusionSvc.get(), mMosaicSvc.get(),
         mWorkflowRepo.get());
     mBatchSvc       = std::make_unique<BatchServiceImpl>();
-    mLayerSvc       = std::make_unique<LayerServiceImpl>(mRasterReader.get());
+    mLayerSvc       = std::make_unique<LayerServiceImpl>(mRasterReader.get(), mVectorReader.get());
 }
 
 void ApplicationController::wireLayerSignals()
@@ -136,7 +139,7 @@ void ApplicationController::wireLayerSignals()
         bmPanel->setVisible(!bmPanel->isVisible());
     });
 
-    // UI → Service：多波段产品 → 添加到波段管理器面板
+    // UI → Service：栅格图层 → 多波段产品添加到波段管理器，其余直接加载
     connect(panel, &LayerPanel::layerAddRequested, this, [this, svc, bmPanel](const QStringList& paths)
     {
         QStringList remainingPaths;
@@ -149,7 +152,6 @@ void ApplicationController::wireLayerSignals()
                 const auto bands = prod->bands();
                 if (bands.size() > 1)
                 {
-                    // Add product to Band Manager panel
                     bmPanel->addProduct(path, bands, prod->sensorInfo());
                     bmPanel->show();
                     continue;
@@ -160,6 +162,13 @@ void ApplicationController::wireLayerSignals()
 
         if (!remainingPaths.isEmpty())
             svc->addLayers(remainingPaths);
+    });
+
+    // UI → Service：矢量图层 → 直接加载
+    connect(panel, &LayerPanel::vectorLayerAddRequested, this,
+        [svc](const QStringList& paths)
+    {
+        svc->addVectorLayers(paths);
     });
 
     // Band Manager → open product
@@ -183,22 +192,27 @@ void ApplicationController::wireLayerSignals()
     // Service → UI
     connect(svc, &ILayerService::layerLoaded,
             panel, &LayerPanel::onLayerLoaded);
+    connect(svc, &ILayerService::vectorLayerLoaded,
+            panel, &LayerPanel::onVectorLayerLoaded);
     connect(svc, &ILayerService::layerRemoved,
             panel, &LayerPanel::onLayerRemoved);
     connect(svc, &ILayerService::layerError,
             panel, &LayerPanel::onLayerError);
     connect(svc, &ILayerService::renderLayersChanged, this, [this](const QList<RasterImage>&)
     {
-        // rebuildCanvasLayers 已包含 refresh，此处无需重复调用
+        Q_UNUSED(this);
+    });
+    connect(svc, &ILayerService::vectorRenderLayersChanged, this, [this](const QList<VectorLayerInfo>&)
+    {
         Q_UNUSED(this);
     });
 
-    // Zoom to layer
+    // Zoom to layer — use QgsMapLayer::extent() to preserve CRS
     connect(panel, &LayerPanel::zoomToLayerRequested, this, [this, svc](const QString& layerId)
     {
-        QRectF extent = svc->layerExtent(layerId);
-        if (!extent.isEmpty())
-            mMainWindow->mapCanvasWidget()->setCanvasExtent(extent);
+        QgsMapLayer* ml = svc->mapLayer(layerId);
+        if (ml && !ml->extent().isEmpty())
+            mMainWindow->mapCanvasWidget()->setCanvasExtent(ml->extent());
     });
 
     // 波段拆分
@@ -278,6 +292,26 @@ void ApplicationController::wireLayerSignals()
                 tr("无法导出图层: %1").arg(img.displayName));
     });
 
+    // 矢量图层样式设置
+    connect(panel, &LayerPanel::vectorStyleRequested, this, [this, svc](const QString& layerId)
+    {
+        VectorLayerInfo vInfo = svc->vectorLayerInfo(layerId);
+        if (vInfo.layerId.isEmpty()) return;
+
+        VectorStyleDialog dlg(mMainWindow);
+        dlg.setFieldNames(vInfo.fieldNames);
+
+        // Try to read current style from existing config (default for now)
+        VectorStyleConfig cfg;
+        cfg.classifyField = vInfo.fieldNames.isEmpty() ? QString() : vInfo.fieldNames.first();
+        dlg.setConfig(cfg);
+
+        if (dlg.exec() == QDialog::Accepted)
+        {
+            svc->setVectorStyle(layerId, dlg.config());
+        }
+    });
+
     // 图层透明度
     connect(panel, &LayerPanel::opacityChanged, this, [svc](const QString& layerId, double val)
     {
@@ -291,49 +325,96 @@ void ApplicationController::wireLayerSignals()
             panel->syncOpacity(svc->layerOpacity(layerId));
     });
 
-    // 选中图层时更新元数据面板
+    // 选中图层时更新元数据面板（栅格或矢量）
     auto* metaPanel = mMainWindow->metadataPanel();
-    if (metaPanel)
+    auto* vecMetaPanel = mMainWindow->vectorMetadataPanel();
+    if (metaPanel && vecMetaPanel)
     {
         connect(panel, &LayerPanel::layerSelectionChanged, this,
-            [svc, metaPanel](const QString& layerId)
+            [this, svc, metaPanel, vecMetaPanel](const QString& layerId)
             {
                 if (layerId.isEmpty())
                 {
                     metaPanel->clear();
+                    vecMetaPanel->clear();
                     return;
                 }
+
+                // Try raster first
                 RasterImage img = svc->layerImage(layerId);
-                if (img.rasterSize.isEmpty())
+                if (!img.rasterSize.isEmpty())
                 {
-                    metaPanel->clear();
+                    mMainWindow->showRasterMetadata();
+
+                    QString datum;
+                    if (!img.projectionWkt.isEmpty())
+                    {
+                        QByteArray wkt = img.projectionWkt.toUtf8();
+                        char* pszWkt = wkt.data();
+                        OGRSpatialReferenceH hSRS = OSRNewSpatialReference(nullptr);
+                        if (OSRImportFromWkt(hSRS, &pszWkt) == OGRERR_NONE)
+                        {
+                            const char* d = OSRGetAttrValue(hSRS, "DATUM", 0);
+                            if (d) datum = QString::fromUtf8(d);
+                        }
+                        OSRDestroySpatialReference(hSRS);
+                    }
+
+                    QString latLonDms, latLonDecimal;
+                    LatLonBounds ll = GeoTransformUtils::computeLatLonBounds(
+                        img.geoTransform, img.rasterSize, img.projectionWkt);
+                    if (ll.valid)
+                    {
+                        latLonDms = QStringLiteral("经度: %1 ~ %2\n纬度: %3 ~ %4")
+                            .arg(GeoTransformUtils::formatDms(ll.minLon, false),
+                                 GeoTransformUtils::formatDms(ll.maxLon, false),
+                                 GeoTransformUtils::formatDms(ll.minLat, true),
+                                 GeoTransformUtils::formatDms(ll.maxLat, true));
+                        latLonDecimal = QStringLiteral("(%1°, %2°) ~ (%3°, %4°)")
+                            .arg(ll.minLon, 0, 'f', 6)
+                            .arg(ll.minLat, 0, 'f', 6)
+                            .arg(ll.maxLon, 0, 'f', 6)
+                            .arg(ll.maxLat, 0, 'f', 6);
+                    }
+
+                    metaPanel->showMetadata(
+                        layerId, img.displayName,
+                        img.rasterSize.width(), img.rasterSize.height(),
+                        img.bandCount,
+                        img.projectionWkt, img.epsgCode,
+                        img.geoTransform.size() >= 6 ? std::abs(img.geoTransform[1]) : 0.0,
+                        img.geoTransform.size() >= 6 ? std::abs(img.geoTransform[5]) : 0.0,
+                        datum, img.noDataValue,
+                        img.dataType, img.rasterSourcePath,
+                        latLonDms, latLonDecimal);
                     return;
                 }
 
-                // Extract datum name from WKT
-                QString datum;
-                if (!img.projectionWkt.isEmpty())
+                // Try vector
+                VectorLayerInfo vInfo = svc->vectorLayerInfo(layerId);
+                if (!vInfo.layerId.isEmpty())
                 {
-                    QByteArray wkt = img.projectionWkt.toUtf8();
-                    char* pszWkt = wkt.data();
-                    OGRSpatialReferenceH hSRS = OSRNewSpatialReference(nullptr);
-                    if (OSRImportFromWkt(hSRS, &pszWkt) == OGRERR_NONE)
+                    mMainWindow->showVectorMetadata();
+
+                    QString datum;
+                    if (!vInfo.projectionWkt.isEmpty())
                     {
-                        const char* d = OSRGetAttrValue(hSRS, "DATUM", 0);
-                        if (d) datum = QString::fromUtf8(d);
+                        QByteArray wkt = vInfo.projectionWkt.toUtf8();
+                        char* pszWkt = wkt.data();
+                        OGRSpatialReferenceH hSRS = OSRNewSpatialReference(nullptr);
+                        if (OSRImportFromWkt(hSRS, &pszWkt) == OGRERR_NONE)
+                        {
+                            const char* d = OSRGetAttrValue(hSRS, "DATUM", 0);
+                            if (d) datum = QString::fromUtf8(d);
+                        }
+                        OSRDestroySpatialReference(hSRS);
                     }
-                    OSRDestroySpatialReference(hSRS);
+                    vecMetaPanel->showMetadata(vInfo, datum);
+                    return;
                 }
 
-                metaPanel->showMetadata(
-                    layerId, img.displayName,
-                    img.rasterSize.width(), img.rasterSize.height(),
-                    img.bandCount,
-                    img.projectionWkt, img.epsgCode,
-                    img.geoTransform.size() >= 6 ? std::abs(img.geoTransform[1]) : 0.0,
-                    img.geoTransform.size() >= 6 ? std::abs(img.geoTransform[5]) : 0.0,
-                    datum, img.noDataValue,
-                    img.dataType, img.rasterSourcePath);
+                metaPanel->clear();
+                vecMetaPanel->clear();
             });
     }
 }

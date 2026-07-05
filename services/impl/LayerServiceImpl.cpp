@@ -1,8 +1,22 @@
 #include "LayerServiceImpl.h"
 #include "dataaccess/IRasterReader.h"
+#include "dataaccess/IVectorReader.h"
 #include "dataaccess/ISensorProduct.h"
 #include "dataaccess/SensorProductFactory.h"
 #include <qgsrasterlayer.h>
+#include <qgsvectorlayer.h>
+#include <qgssinglesymbolrenderer.h>
+#include <qgsfillsymbol.h>
+#include <qgslinesymbol.h>
+#include <qgsmarkersymbol.h>
+#include <qgscategorizedsymbolrenderer.h>
+#include <qgsgraduatedsymbolrenderer.h>
+#include <qgscolorramp.h>
+#include <qgsclassificationmethod.h>
+#include <qgsclassificationjenks.h>
+#include <qgsclassificationequalinterval.h>
+#include <qgsclassificationquantile.h>
+#include <qgsclassificationstandarddeviation.h>
 #include <qgsmapcanvas.h>
 #include <qgsmaplayer.h>
 #include <qgsrectangle.h>
@@ -23,8 +37,8 @@
 #include <QSet>
 #include <QThread>
 
-LayerServiceImpl::LayerServiceImpl(IRasterReader* reader, QObject* parent)
-    : ILayerService(), mReader(reader)
+LayerServiceImpl::LayerServiceImpl(IRasterReader* reader, IVectorReader* vecReader, QObject* parent)
+    : ILayerService(), mReader(reader), mVectorReader(vecReader)
     {
     setParent(parent);
 }
@@ -41,6 +55,8 @@ LayerServiceImpl::~LayerServiceImpl()
     // that must be released before we can safely remove the VRT files.
     qDeleteAll(mMapLayers);
     mMapLayers.clear();
+    qDeleteAll(mVectorMapLayers);
+    mVectorMapLayers.clear();
 
     // Now safe to remove temp VRT files
     int removed = 0;
@@ -75,14 +91,19 @@ void LayerServiceImpl::rebuildCanvasLayers()
     const QgsRectangle currentExtent = mCanvas->extent();
     const bool hasExtent = !currentExtent.isEmpty();
 
+    // Tree index 0 (top) renders first → bottom of canvas;
+    // tree last renders last → top of canvas.
     QList<QgsMapLayer*> visibleLayers;
-    for (int i = 0; i < mLayers.size(); ++i)
+    for (int i = 0; i < mLayerOrder.size(); ++i)
     {
-        if (i < mMapLayers.size() && mMapLayers[i])
-        {
-            if (mLayers[i].visible)
-                visibleLayers.append(mMapLayers[i]);
-        }
+        const QString& id = mLayerOrder[i];
+        QgsMapLayer* ml = findMapLayer(id);
+        if (!ml) continue;
+
+        for (const auto& img : mLayers)
+            if (img.layerId == id && img.visible) { visibleLayers.append(ml); break; }
+        for (const auto& vInfo : mVectorLayerInfos)
+            if (vInfo.layerId == id && vInfo.visible) { visibleLayers.append(ml); break; }
     }
 
     mCanvas->setLayers(visibleLayers);
@@ -170,6 +191,7 @@ QStringList LayerServiceImpl::addLayers(const QStringList& filePaths)
 
                 mLayers.prepend(img);
                 mMapLayers.prepend(rl);
+                mLayerOrder.prepend(id);
                 addedIds.append(id);
                 emit layerLoaded(id, img.displayName, img.dataType);
                 qDebug() << "[LayerService] band added:" << id << desc.bandName
@@ -218,6 +240,7 @@ QStringList LayerServiceImpl::addLayers(const QStringList& filePaths)
 
             mLayers.prepend(img);
             mMapLayers.prepend(rl);
+            mLayerOrder.prepend(id);
             addedIds.append(id);
             emit layerLoaded(id, fi.fileName(), img.dataType);
             qDebug() << "[LayerService] layer created:" << id << "crs:" << rl->crs().authid();
@@ -243,32 +266,54 @@ QStringList LayerServiceImpl::addLayers(const QStringList& filePaths)
 void LayerServiceImpl::removeLayers(const QStringList& layerIds)
 {
     qDebug() << "[LayerService] removeLayers:" << layerIds;
+    bool changed = false;
     for (const QString& id : layerIds)
     {
+        // Check raster layers
         const int idx = [&]() -> int {
             for (int i = 0; i < mLayers.size(); ++i)
                 if (mLayers[i].layerId == id) return i;
             return -1;
         }();
-        if (idx < 0) continue;
-
-        // Release the QGIS layer first (it holds GDAL handles on the VRT),
-        // then clean up the temp VRT file.
-        const QString vrtPath = mLayers[idx].rasterSourcePath;
-        mLayers.removeAt(idx);
-        if (idx < mMapLayers.size())
-            delete mMapLayers.takeAt(idx);
-
-        if (vrtPath.endsWith(QStringLiteral(".vrt"), Qt::CaseInsensitive)
-            && vrtPath.contains(QDir::tempPath()))
+        if (idx >= 0)
         {
-            if (QFile::remove(vrtPath))
-                qDebug() << "[LayerService] removeLayers deleted temp VRT:" << vrtPath;
+            mLayerOrder.removeAll(id);
+            const QString vrtPath = mLayers[idx].rasterSourcePath;
+            mLayers.removeAt(idx);
+            if (idx < mMapLayers.size()) {
+                delete mMapLayers.takeAt(idx);
+            }
+
+            if (vrtPath.endsWith(QStringLiteral(".vrt"), Qt::CaseInsensitive)
+                && vrtPath.contains(QDir::tempPath()))
+            {
+                if (QFile::remove(vrtPath))
+                    qDebug() << "[LayerService] removeLayers deleted temp VRT:" << vrtPath;
+            }
+            emit layerRemoved(id);
+            changed = true;
+            continue;
         }
-        emit layerRemoved(id);
+
+        // Check vector layers
+        const int vIdx = vectorLayerIndex(id);
+        if (vIdx >= 0)
+        {
+            mLayerOrder.removeAll(id);
+            mVectorLayerInfos.removeAt(vIdx);
+            if (vIdx < mVectorMapLayers.size()) {
+                delete mVectorMapLayers.takeAt(vIdx);
+            }
+            emit layerRemoved(id);
+            changed = true;
+        }
     }
-    rebuildCanvasLayers();
-    emit renderLayersChanged(mLayers);
+    if (changed)
+    {
+        rebuildCanvasLayers();
+        emit renderLayersChanged(mLayers);
+        emit vectorRenderLayersChanged(mVectorLayerInfos);
+    }
 }
 
 // ─── 可见性 ──────────────────────────────────────────────────────────────────
@@ -280,11 +325,21 @@ void LayerServiceImpl::setLayerVisibility(const QString& layerId, bool visible)
         if (img.layerId == layerId)
         {
             img.visible = visible;
-            break;
+            rebuildCanvasLayers();
+            emit renderLayersChanged(mLayers);
+            return;
         }
     }
-    rebuildCanvasLayers();
-    emit renderLayersChanged(mLayers);
+    for (auto& vInfo : mVectorLayerInfos)
+    {
+        if (vInfo.layerId == layerId)
+        {
+            vInfo.visible = visible;
+            rebuildCanvasLayers();
+            emit vectorRenderLayersChanged(mVectorLayerInfos);
+            return;
+        }
+    }
 }
 
 double LayerServiceImpl::layerOpacity(const QString& layerId) const
@@ -297,30 +352,38 @@ double LayerServiceImpl::layerOpacity(const QString& layerId) const
 
 void LayerServiceImpl::setLayerOpacity(const QString& layerId, double opacity)
 {
-    // 持久化到模型
+    // 持久化到模型 - 栅格
     for (auto& img : mLayers)
     {
         if (img.layerId == layerId)
         {
             img.opacity = opacity;
-            break;
+            QgsMapLayer* ml = findMapLayer(layerId);
+            auto* rl = qobject_cast<QgsRasterLayer*>(ml);
+            if (rl)
+            {
+                rl->setOpacity(opacity);
+                rl->triggerRepaint();
+                if (mCanvas)
+                    mCanvas->refresh();
+            }
+            return;
         }
     }
-
-    // 应用到 QGIS 图层
-    QgsMapLayer* ml = findMapLayer(layerId);
-    auto* rl = qobject_cast<QgsRasterLayer*>(ml);
-    qDebug() << "[LayerService] setLayerOpacity:" << layerId
-             << "opacity:" << opacity << "found:" << (rl != nullptr);
-    if (rl)
+    // 矢量
+    for (auto& vInfo : mVectorLayerInfos)
     {
-        rl->setOpacity(opacity);
-        rl->triggerRepaint();
-        if (mCanvas)
+        if (vInfo.layerId == layerId)
         {
-            mCanvas->refresh();
-            qDebug() << "[LayerService] canvas refreshed, current opacity:"
-                     << rl->opacity();
+            vInfo.opacity = opacity;
+            const int vIdx = vectorLayerIndex(layerId);
+            if (vIdx >= 0 && vIdx < mVectorMapLayers.size() && mVectorMapLayers[vIdx])
+            {
+                mVectorMapLayers[vIdx]->setOpacity(opacity);
+                if (mCanvas)
+                    mCanvas->refresh();
+            }
+            return;
         }
     }
 }
@@ -329,45 +392,36 @@ void LayerServiceImpl::setLayerOpacity(const QString& layerId, double opacity)
 
 void LayerServiceImpl::reorderLayers(const QStringList& orderedIds)
 {
-    QList<RasterImage> reorderedImgs;
-    QList<QgsMapLayer*> reorderedLyrs;
-    QSet<int> consumed;
-
+    // Build new unified order: ordered IDs first, then any remaining ones
+    QStringList newOrder;
+    QSet<QString> seen;
     for (const QString& id : orderedIds)
     {
-        for (int i = 0; i < mLayers.size(); ++i)
+        // Only include IDs that actually exist
+        if (layerIndex(id) >= 0 || vectorLayerIndex(id) >= 0)
         {
-            if (!consumed.contains(i) && mLayers[i].layerId == id)
-            {
-                reorderedImgs.append(mLayers[i]);
-                if (i < mMapLayers.size())
-                    reorderedLyrs.append(mMapLayers[i]);
-                consumed.insert(i);
-                break;
-            }
+            newOrder.append(id);
+            seen.insert(id);
         }
     }
-
-    for (int i = 0; i < mLayers.size(); ++i)
+    // Append any IDs not in orderedIds (preserve their relative order from old list)
+    for (const QString& id : mLayerOrder)
     {
-        if (!consumed.contains(i))
-        {
-            reorderedImgs.append(mLayers[i]);
-            if (i < mMapLayers.size())
-                reorderedLyrs.append(mMapLayers[i]);
-        }
+        if (!seen.contains(id))
+            newOrder.append(id);
     }
 
-    mLayers    = reorderedImgs;
-    mMapLayers = reorderedLyrs;
+    mLayerOrder = newOrder;
     rebuildCanvasLayers();
     emit renderLayersChanged(mLayers);
+    emit vectorRenderLayersChanged(mVectorLayerInfos);
 }
 
 // ─── 查询 ────────────────────────────────────────────────────────────────────
 
 QRectF LayerServiceImpl::layerExtent(const QString& layerId) const
 {
+    // Check QGIS raster layers first
     for (int i = 0; i < mLayers.size(); ++i)
     {
         if (mLayers[i].layerId == layerId && i < mMapLayers.size() && mMapLayers[i])
@@ -376,10 +430,26 @@ QRectF LayerServiceImpl::layerExtent(const QString& layerId) const
             return QRectF(ext.xMinimum(), ext.yMinimum(), ext.width(), ext.height());
         }
     }
+    // Check QGIS vector layers
+    for (int i = 0; i < mVectorLayerInfos.size(); ++i)
+    {
+        if (mVectorLayerInfos[i].layerId == layerId
+            && i < mVectorMapLayers.size() && mVectorMapLayers[i])
+        {
+            const QgsRectangle ext = mVectorMapLayers[i]->extent();
+            return QRectF(ext.xMinimum(), ext.yMinimum(), ext.width(), ext.height());
+        }
+    }
+    // Fallback to stored extent
     for (const auto& img : mLayers)
     {
         if (img.layerId == layerId)
             return img.extent();
+    }
+    for (const auto& vInfo : mVectorLayerInfos)
+    {
+        if (vInfo.layerId == layerId)
+            return vInfo.extent;
     }
     return {};
 }
@@ -399,7 +469,12 @@ RasterImage LayerServiceImpl::layerImage(const QString& layerId) const
 QgsMapLayer* LayerServiceImpl::findMapLayer(const QString& layerId) const
 {
     int idx = layerIndex(layerId);
-    return (idx >= 0 && idx < mMapLayers.size()) ? mMapLayers[idx] : nullptr;
+    if (idx >= 0 && idx < mMapLayers.size())
+        return mMapLayers[idx];
+    int vIdx = vectorLayerIndex(layerId);
+    if (vIdx >= 0 && vIdx < mVectorMapLayers.size())
+        return mVectorMapLayers[vIdx];
+    return nullptr;
 }
 
 int LayerServiceImpl::layerIndex(const QString& layerId) const
@@ -502,6 +577,7 @@ QStringList LayerServiceImpl::splitToBands(const QString& layerId)
 
         mLayers.prepend(img);
         mMapLayers.prepend(bandLayer);
+        mLayerOrder.prepend(newId);
         newIds.append(newId);
         emit layerLoaded(newId, img.displayName, QStringLiteral("Band"));
     }
@@ -682,6 +758,7 @@ QString LayerServiceImpl::createRgbComposite(const QString& productId,
 
     mLayers.prepend(img);
     mMapLayers.prepend(rl);
+    mLayerOrder.prepend(newId);
     emit layerLoaded(newId, displayName, QStringLiteral("RGB"));
 
     rebuildCanvasLayers();
@@ -813,6 +890,7 @@ QString LayerServiceImpl::addRgbLayerFromPaths(const QString& rPath,
 
     mLayers.prepend(img);
     mMapLayers.prepend(rl);
+    mLayerOrder.prepend(newId);
     emit layerLoaded(newId, img.displayName, QStringLiteral("RGB"));
     rebuildCanvasLayers();
     emit renderLayersChanged(mLayers);
@@ -970,6 +1048,7 @@ QString LayerServiceImpl::addRgbLayer(const QString& productPath,
 
     mLayers.prepend(img);
     mMapLayers.prepend(rl);
+    mLayerOrder.prepend(newId);
     emit layerLoaded(newId, displayName, QStringLiteral("RGB"));
 
     rebuildCanvasLayers();
@@ -1005,6 +1084,249 @@ bool LayerServiceImpl::reconfigureRgb(const QString& layerId,
 
     qDebug() << "[LayerService] RGB reconfigured:" << layerId << "→" << newId;
     return true;
+}
+
+// ─── 矢量图层 ────────────────────────────────────────────────────────────────
+
+int LayerServiceImpl::vectorLayerIndex(const QString& layerId) const
+{
+    for (int i = 0; i < mVectorLayerInfos.size(); ++i)
+        if (mVectorLayerInfos[i].layerId == layerId) return i;
+    return -1;
+}
+
+QStringList LayerServiceImpl::addVectorLayers(const QStringList& filePaths)
+{
+    qDebug() << "[LayerService] addVectorLayers:" << filePaths;
+    QStringList addedIds;
+
+    if (!mVectorReader)
+    {
+        qWarning() << "[LayerService] addVectorLayers: no IVectorReader set";
+        for (const QString& path : filePaths)
+            emit layerError(path, QStringLiteral("矢量读取器未初始化"));
+        return addedIds;
+    }
+
+    for (const QString& path : filePaths)
+    {
+        if (!mVectorReader->open(path))
+        {
+            emit layerError(path, QStringLiteral("无法打开矢量文件: ") + path);
+            continue;
+        }
+
+        const int nLayers = mVectorReader->layerCount();
+        if (nLayers == 0)
+        {
+            emit layerError(path, QStringLiteral("矢量文件中没有图层"));
+            mVectorReader->close();
+            continue;
+        }
+
+        for (int lyrIdx = 0; lyrIdx < nLayers; ++lyrIdx)
+        {
+            const QString layerName = mVectorReader->layerNames().value(lyrIdx);
+            const QString displayName = nLayers > 1
+                ? QStringLiteral("%1 - %2").arg(QFileInfo(path).fileName(), layerName)
+                : QFileInfo(path).fileName();
+
+            const QString id = QStringLiteral("vec_%1_%2")
+                .arg(mVectorLayerInfos.size())
+                .arg(layerName.isEmpty() ? QString::number(lyrIdx) : layerName);
+
+            VectorLayerInfo info = mVectorReader->toVectorLayerInfo(id, displayName, lyrIdx);
+            info.filePath = path;
+
+            auto* vl = new QgsVectorLayer(path, displayName, QStringLiteral("ogr"));
+            if (!vl->isValid())
+            {
+                qWarning() << "[LayerService] QGIS failed to load vector:" << path;
+                emit layerError(id, QStringLiteral("QGIS 无法加载矢量图层: ") + displayName);
+                delete vl;
+                continue;
+            }
+
+            mVectorLayerInfos.prepend(info);
+            mVectorMapLayers.prepend(vl);
+            mLayerOrder.prepend(id);
+            addedIds.append(id);
+            emit vectorLayerLoaded(id, displayName, info.geometryType);
+            qDebug() << "[LayerService] vector layer added:" << id
+                     << "features:" << info.featureCount
+                     << "type:" << info.geometryType;
+        }
+
+        mVectorReader->close();
+    }
+
+    if (!addedIds.isEmpty())
+    {
+        rebuildCanvasLayers();
+        emit vectorRenderLayersChanged(mVectorLayerInfos);
+    }
+    return addedIds;
+}
+
+QgsMapLayer* LayerServiceImpl::mapLayer(const QString& layerId) const
+{
+    return findMapLayer(layerId);
+}
+
+VectorLayerInfo LayerServiceImpl::vectorLayerInfo(const QString& layerId) const
+{
+    for (const auto& info : mVectorLayerInfos)
+    {
+        if (info.layerId == layerId)
+            return info;
+    }
+    return {};
+}
+
+static QColor colorForIndex(int idx, int total)
+{
+    // Equal-spaced hues around the color wheel for visual distinctness
+    const int hue = (idx * 360 / qMax(total, 1)) % 360;
+    return QColor::fromHsv(hue, 200, 240);
+}
+
+void LayerServiceImpl::setVectorStyle(const QString& layerId, const VectorStyleConfig& style)
+{
+    const int idx = vectorLayerIndex(layerId);
+    if (idx < 0 || idx >= mVectorMapLayers.size())
+        return;
+
+    auto* vl = qobject_cast<QgsVectorLayer*>(mVectorMapLayers[idx]);
+    if (!vl)
+        return;
+
+    if (style.styleType == VectorStyleType::SingleSymbol)
+    {
+        // ── 单一符号 ──
+        const int geomType = static_cast<int>(vl->geometryType());
+        QgsSymbol* symbol = nullptr;
+
+        if (geomType == 0)
+        {
+            QVariantMap props;
+            props[QStringLiteral("color")] = style.strokeColor.name();
+            props[QStringLiteral("size")]  = QString::number(style.markerSize);
+            symbol = QgsMarkerSymbol::createSimple(props);
+        }
+        else if (geomType == 1)
+        {
+            QVariantMap props;
+            props[QStringLiteral("color")] = style.strokeColor.name();
+            props[QStringLiteral("width")] = QString::number(style.strokeWidth);
+            symbol = QgsLineSymbol::createSimple(props);
+        }
+        else
+        {
+            QVariantMap props;
+            props[QStringLiteral("color")]         = style.fillColor.name();
+            props[QStringLiteral("outline_color")] = style.strokeColor.name();
+            props[QStringLiteral("outline_width")] = QString::number(style.strokeWidth);
+            symbol = QgsFillSymbol::createSimple(props);
+        }
+
+        if (symbol)
+        {
+            vl->setRenderer(new QgsSingleSymbolRenderer(symbol));
+            if (mCanvas) mCanvas->refresh();
+        }
+        return;
+    }
+
+    // ── 加载字段数据 ──
+    if (!mVectorReader)
+        return;
+
+    const int vLyrIdx = 0;  // single-layer files; multi-layer handled on open
+    const QString filePath = mVectorLayerInfos[idx].filePath;
+    if (!mVectorReader->open(filePath))
+        return;
+
+    const int fieldIdx = vl->fields().lookupField(style.classifyField);
+    if (fieldIdx < 0)
+    {
+        mVectorReader->close();
+        qWarning() << "[LayerService] classify field not found:" << style.classifyField;
+        return;
+    }
+
+    if (style.styleType == VectorStyleType::Categorized)
+    {
+        // ── 分类着色 ──
+        const QStringList uniqVals = mVectorReader->uniqueValues(
+            vLyrIdx, style.classifyField);
+        if (uniqVals.isEmpty())
+        {
+            mVectorReader->close();
+            return;
+        }
+
+        QgsCategoryList categories;
+        for (int i = 0; i < uniqVals.size(); ++i)
+        {
+            QgsSymbol* sym = QgsSymbol::defaultSymbol(vl->geometryType());
+            sym->setColor(colorForIndex(i, uniqVals.size()));
+            categories << QgsRendererCategory(QVariant(uniqVals[i]), sym, uniqVals[i]);
+        }
+        mVectorReader->close();
+
+        auto* renderer = new QgsCategorizedSymbolRenderer(style.classifyField, categories);
+        renderer->setSourceColorRamp(new QgsRandomColorRamp());
+        vl->setRenderer(renderer);
+        if (mCanvas) mCanvas->refresh();
+    }
+    else if (style.styleType == VectorStyleType::Graduated)
+    {
+        // ── 渐变着色 ──
+        double minVal = 0.0, maxVal = 0.0;
+        if (!mVectorReader->numericFieldRange(vLyrIdx, style.classifyField, minVal, maxVal)
+            || qFuzzyCompare(minVal, maxVal))
+        {
+            mVectorReader->close();
+            return;
+        }
+
+        QgsClassificationMethod* method = nullptr;
+        const QString& m = style.classificationMethod;
+        if (m == QStringLiteral("Jenks"))
+            method = new QgsClassificationJenks();
+        else if (m == QStringLiteral("EqualInterval"))
+            method = new QgsClassificationEqualInterval();
+        else if (m == QStringLiteral("Quantile"))
+            method = new QgsClassificationQuantile();
+        else if (m == QStringLiteral("StdDev"))
+            method = new QgsClassificationStandardDeviation();
+        else
+            method = new QgsClassificationJenks();
+
+        method->setLabelFormat(QStringLiteral("%1 - %2"));
+        const QList<QgsClassificationRange> classes = method->classes(
+            minVal, maxVal, style.classCount);
+        delete method;
+
+        QgsRangeList rangeList;
+        for (int i = 0; i < classes.size(); ++i)
+        {
+            QgsSymbol* sym = QgsSymbol::defaultSymbol(vl->geometryType());
+            sym->setColor(colorForIndex(i, classes.size()));
+            const QString label = QStringLiteral("%1 - %2")
+                .arg(classes[i].lowerBound(), 0, 'f', 2)
+                .arg(classes[i].upperBound(), 0, 'f', 2);
+            rangeList << QgsRendererRange(classes[i].lowerBound(),
+                                           classes[i].upperBound(), sym, label);
+        }
+        mVectorReader->close();
+
+        auto* renderer = new QgsGraduatedSymbolRenderer(style.classifyField, rangeList);
+        renderer->setSourceColorRamp(
+            new QgsGradientColorRamp(QColor(255, 255, 200), QColor(200, 0, 0)));
+        vl->setRenderer(renderer);
+        if (mCanvas) mCanvas->refresh();
+    }
 }
 
 // ─── 导出图层 ────────────────────────────────────────────────────────────────

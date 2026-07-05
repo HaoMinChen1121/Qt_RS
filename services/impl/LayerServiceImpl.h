@@ -2,9 +2,12 @@
 #define LAYERSERVICEIMPL_H
 
 #include "services/ILayerService.h"
+#include "domain/VectorLayerInfo.h"
+#include "domain/VectorStyle.h"
 #include <QList>
 
 class IRasterReader;
+class IVectorReader;
 class ISensorProduct;
 class QgsMapCanvas;
 class QgsMapLayer;
@@ -13,7 +16,8 @@ class LayerServiceImpl : public ILayerService
 {
     Q_OBJECT
 public:
-    explicit LayerServiceImpl(IRasterReader* reader, QObject* parent = nullptr);
+    explicit LayerServiceImpl(IRasterReader* reader, IVectorReader* vecReader = nullptr,
+                              QObject* parent = nullptr);
     ~LayerServiceImpl() override;
 
     void setMapCanvas(QgsMapCanvas* canvas);
@@ -51,6 +55,12 @@ public:
     bool reconfigureRgb(const QString& layerId,
                         const BandConfiguration& cfg) override;
 
+    // 矢量图层
+    QStringList addVectorLayers(const QStringList& filePaths) override;
+    VectorLayerInfo vectorLayerInfo(const QString& layerId) const override;
+    void setVectorStyle(const QString& layerId, const VectorStyleConfig& style) override;
+    QgsMapLayer* mapLayer(const QString& layerId) const override;
+
     // 导出
     bool exportLayer(const QString& layerId, const QString& outputPath,
                       const ExportOptions& options = ExportOptions()) override;
@@ -59,11 +69,16 @@ private:
     void rebuildCanvasLayers();
     QgsMapLayer* findMapLayer(const QString& layerId) const;
     int layerIndex(const QString& layerId) const;
+    int vectorLayerIndex(const QString& layerId) const;
 
     IRasterReader* mReader;
+    IVectorReader* mVectorReader;
     QgsMapCanvas* mCanvas = nullptr;
     QList<RasterImage> mLayers;
     QList<QgsMapLayer*> mMapLayers;
+    QList<VectorLayerInfo> mVectorLayerInfos;
+    QList<QgsMapLayer*> mVectorMapLayers;
+    QStringList mLayerOrder;  // unified display order: all layer IDs (raster + vector)
 };
 
 #endif // LAYERSERVICEIMPL_H

@@ -3,8 +3,19 @@
 
 #include <QVector>
 #include <QPair>
+#include <QSize>
+#include <QString>
 
 struct GcpPoint;
+
+struct LatLonBounds
+{
+    double minLat = 0.0;
+    double maxLat = 0.0;
+    double minLon = 0.0;
+    double maxLon = 0.0;
+    bool valid = false;
+};
 
 /**
  * @brief GDAL 地理变换辅助工具函数集
@@ -55,6 +66,29 @@ bool computeOverlap(const QVector<double>& gt1, int w1, int h1,
                     const QVector<double>& gt2, int w2, int h2,
                     int& xOff, int& yOff, int& xSize, int& ySize,
                     int& xOff2, int& yOff2, int& xSize2, int& ySize2);
+
+/**
+ * @brief 将影像四角坐标从原生投影转换到 WGS84 经纬度范围
+ *
+ * 使用 OGRCoordinateTransformation 进行 CRS 转换。
+ * 若影像本身即为 EPSG:4326 则直接读取四至。
+ *
+ * @param geoTransform   GDAL 六参数地理变换
+ * @param rasterSize     影像像素尺寸
+ * @param projectionWkt  影像投影 WKT 字符串
+ * @return               WGS84 经纬度范围
+ */
+LatLonBounds computeLatLonBounds(const QVector<double>& geoTransform,
+                                  const QSize& rasterSize,
+                                  const QString& projectionWkt);
+
+/**
+ * @brief 将十进制度转换为度分秒字符串（科研制图用）
+ * @param dd  十进制度数
+ * @param isLat  true=纬度(N/S), false=经度(E/W)
+ * @return     格式化字符串，如 "114°20′30″E"
+ */
+QString formatDms(double dd, bool isLat);
 
 } // namespace GeoTransformUtils
 
