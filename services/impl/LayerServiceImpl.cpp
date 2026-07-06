@@ -8,6 +8,7 @@
 #include <qgssinglesymbolrenderer.h>
 #include <qgsfillsymbol.h>
 #include <qgslinesymbol.h>
+#include <qgslinesymbollayer.h>
 #include <qgsmarkersymbol.h>
 #include <qgscategorizedsymbolrenderer.h>
 #include <qgsgraduatedsymbolrenderer.h>
@@ -1183,11 +1184,26 @@ VectorLayerInfo LayerServiceImpl::vectorLayerInfo(const QString& layerId) const
     return {};
 }
 
-static QColor colorForIndex(int idx, int total)
+static QColor colorForIndex(int idx, int total, const QColor& base)
 {
-    // Equal-spaced hues around the color wheel for visual distinctness
-    const int hue = (idx * 360 / qMax(total, 1)) % 360;
-    return QColor::fromHsv(hue, 200, 240);
+    const int baseHue = base.hue();
+    const int hue = (baseHue + idx * 360 / qMax(total, 1)) % 360;
+    return QColor::fromHsv(hue, qMin(255, base.saturation()), qMin(255, base.value() + 20));
+}
+
+static void applyOutlineStyle(QgsSymbol* sym, const QColor& strokeColor, double strokeWidth)
+{
+    if (!sym) return;
+    for (int i = 0; i < sym->symbolLayerCount(); ++i)
+    {
+        QgsSimpleLineSymbolLayer* sl =
+            dynamic_cast<QgsSimpleLineSymbolLayer*>(sym->symbolLayer(i));
+        if (sl)
+        {
+            sl->setColor(strokeColor);
+            sl->setWidth(strokeWidth);
+        }
+    }
 }
 
 void LayerServiceImpl::setVectorStyle(const QString& layerId, const VectorStyleConfig& style)
@@ -1232,7 +1248,10 @@ void LayerServiceImpl::setVectorStyle(const QString& layerId, const VectorStyleC
         if (symbol)
         {
             vl->setRenderer(new QgsSingleSymbolRenderer(symbol));
-            if (mCanvas) mCanvas->refresh();
+            if (mCanvas) {
+                vl->triggerRepaint();
+                mCanvas->refreshAllLayers();
+            }
         }
         return;
     }
@@ -1269,13 +1288,16 @@ void LayerServiceImpl::setVectorStyle(const QString& layerId, const VectorStyleC
         for (int i = 0; i < uniqVals.size(); ++i)
         {
             QgsSymbol* sym = QgsSymbol::defaultSymbol(vl->geometryType());
-            sym->setColor(colorForIndex(i, uniqVals.size()));
+            sym->setColor(colorForIndex(i, uniqVals.size(), style.fillColor));
+            applyOutlineStyle(sym, style.strokeColor, style.strokeWidth);
             categories << QgsRendererCategory(QVariant(uniqVals[i]), sym, uniqVals[i]);
         }
         mVectorReader->close();
 
         auto* renderer = new QgsCategorizedSymbolRenderer(style.classifyField, categories);
-        renderer->setSourceColorRamp(new QgsRandomColorRamp());
+        QColor lighter = style.fillColor.lighter(150);
+        renderer->setSourceColorRamp(
+            new QgsGradientColorRamp(lighter, style.fillColor.darker(200)));
         vl->setRenderer(renderer);
         if (mCanvas) mCanvas->refresh();
     }
@@ -1312,7 +1334,8 @@ void LayerServiceImpl::setVectorStyle(const QString& layerId, const VectorStyleC
         for (int i = 0; i < classes.size(); ++i)
         {
             QgsSymbol* sym = QgsSymbol::defaultSymbol(vl->geometryType());
-            sym->setColor(colorForIndex(i, classes.size()));
+            sym->setColor(colorForIndex(i, classes.size(), style.fillColor));
+            applyOutlineStyle(sym, style.strokeColor, style.strokeWidth);
             const QString label = QStringLiteral("%1 - %2")
                 .arg(classes[i].lowerBound(), 0, 'f', 2)
                 .arg(classes[i].upperBound(), 0, 'f', 2);
@@ -1322,8 +1345,9 @@ void LayerServiceImpl::setVectorStyle(const QString& layerId, const VectorStyleC
         mVectorReader->close();
 
         auto* renderer = new QgsGraduatedSymbolRenderer(style.classifyField, rangeList);
+        QColor lighter = style.fillColor.lighter(180);
         renderer->setSourceColorRamp(
-            new QgsGradientColorRamp(QColor(255, 255, 200), QColor(200, 0, 0)));
+            new QgsGradientColorRamp(lighter, style.fillColor.darker(200)));
         vl->setRenderer(renderer);
         if (mCanvas) mCanvas->refresh();
     }

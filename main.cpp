@@ -70,8 +70,10 @@ void log_out_put(QtMsgType type, const QMessageLogContext& context, const QStrin
  */
 int main(int argc, char* argv[])
 {
-    // PROJ_LIB 必须在 DLL 加载前设 — 否则 proj.db 找不到
+    // QGIS / GDAL / PROJ 运行时数据路径 — 必须在 DLL 加载前设置
+    // 路径基于项目编译时的 QGIS 安装位置 (../qgis-ltr/ = F:/GIS_RJKF/qgis-ltr/)
     qputenv("PROJ_LIB", "E:/GIS_QT/share/proj");
+    qputenv("GDAL_DATA", "E:/GIS_QT/share/gdal");
 
     // 以下是针对高分屏的设置，有高分屏需求都需要按照下面进行设置
     SARibbonBar::initHighDpi();

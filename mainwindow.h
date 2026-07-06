@@ -22,6 +22,7 @@ class LayerPanel;
 class RasterMetadataPanel;
 class VectorMetadataPanel;
 class BandManagerPanel;
+class ToolBoxPanel;
 class QDockWidget;
 class QStackedWidget;
 class SpectralProfileDialog;
@@ -53,6 +54,7 @@ public:
     RasterMetadataPanel* metadataPanel() const { return mMetadataPanel; }
     VectorMetadataPanel* vectorMetadataPanel() const { return mVectorMetadataPanel; }
     BandManagerPanel* bandManagerPanel() const { return mBandManagerPanel; }
+    ToolBoxPanel* toolBoxPanel() const { return mToolBoxPanel; }
 
     // 元数据面板切换
     void showRasterMetadata();
@@ -91,6 +93,7 @@ private:
     void initLayerPanel();
     void initMetadataPanel();
     void initBandManagerPanel();
+    void initToolBoxPanel();
     void initSpectralDialog();
 
     MapCanvasWidget* mMapCanvasWidget = nullptr;
@@ -101,6 +104,8 @@ private:
     RasterMetadataPanel* mMetadataPanel = nullptr;
     VectorMetadataPanel* mVectorMetadataPanel = nullptr;
     BandManagerPanel* mBandManagerPanel = nullptr;
+    ToolBoxPanel* mToolBoxPanel = nullptr;
+    QAction* mToolBoxToggleAction = nullptr;
 
 private Q_SLOTS:
     void onActionHelpTriggered();

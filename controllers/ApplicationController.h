@@ -12,6 +12,10 @@ class IGeometricService;
 class IWorkflowService;
 class IBatchService;
 class ILayerService;
+class IRasterClipService;
+class IRasterReprojectionService;
+class IVectorReprojectionService;
+class IDefineProjectionService;
 
 // Data access interfaces
 class IRasterReader;
@@ -51,6 +55,7 @@ private:
     void wireMosaicSignals();
     void wireGeometricSignals();
     void wireWorkflowSignals();
+    void wireToolBoxSignals();
     void wireGeneralSignals();
 
     MainWindow* mMainWindow;
@@ -63,6 +68,10 @@ private:
     std::unique_ptr<IWorkflowService>    mWorkflowSvc;
     std::unique_ptr<IBatchService>        mBatchSvc;
     std::unique_ptr<ILayerService>        mLayerSvc;
+    std::unique_ptr<IRasterClipService>   mRasterClipSvc;
+    std::unique_ptr<IRasterReprojectionService> mRasterReprojSvc;
+    std::unique_ptr<IVectorReprojectionService> mVectorReprojSvc;
+    std::unique_ptr<IDefineProjectionService>   mDefineProjSvc;
 
     // Data access implementations (owned)
     std::unique_ptr<IRasterReader>              mRasterReader;

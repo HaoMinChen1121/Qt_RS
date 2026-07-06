@@ -26,7 +26,7 @@ void RasterMetadataPanel::setupUI()
     auto* mainLayout = new QVBoxLayout(content);
     mainLayout->setContentsMargins(6, 6, 6, 6);
 
-    auto* title = new QLabel(QStringLiteral("影像元数据"), content);
+    auto* title = new QLabel(QString::fromUtf8("\xe5\xbd\xb1\xe5\x83\x8f\xe5\x85\x83\xe6\x95\xb0\xe6\x8d\xae"), content);
     title->setStyleSheet("font-weight: bold; padding-bottom: 4px;");
     mainLayout->addWidget(title);
 
@@ -41,7 +41,7 @@ void RasterMetadataPanel::setupUI()
     form->setContentsMargins(2, 6, 2, 6);
 
     auto makeLabel = [content]() {
-        auto* lbl = new QLabel(QStringLiteral("--"), content);
+        auto* lbl = new QLabel(QString::fromUtf8("--"), content);
         lbl->setWordWrap(true);
         lbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
         lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -60,16 +60,16 @@ void RasterMetadataPanel::setupUI()
     mLblFilePath   = makeLabel();
     mLblLatLon     = makeLabel();
 
-    form->addRow(QStringLiteral("影像名称:"), mLblDataset);
-    form->addRow(QStringLiteral("波段数量:"), mLblBandCount);
-    form->addRow(QStringLiteral("图像尺寸:"), mLblDimension);
-    form->addRow(QStringLiteral("像元大小:"), mLblPixelSize);
-    form->addRow(QStringLiteral("数据类型:"), mLblDataType);
-    form->addRow(QStringLiteral("投影信息:"), mLblProjection);
-    form->addRow(QStringLiteral("基准面:"),   mLblDatum);
-    form->addRow(QStringLiteral("忽略值:"),   mLblNoData);
-    form->addRow(QStringLiteral("经纬度范围 (WGS84):"), mLblLatLon);
-    form->addRow(QStringLiteral("文件路径:"), mLblFilePath);
+    form->addRow(QString::fromUtf8("\xe5\xbd\xb1\xe5\x83\x8f\xe5\x90\x8d\xe7\xa7\xb0:"), mLblDataset);
+    form->addRow(QString::fromUtf8("\xe6\xb3\xa2\xe6\xae\xb5\xe6\x95\xb0\xe9\x87\x8f:"), mLblBandCount);
+    form->addRow(QString::fromUtf8("\xe5\x9b\xbe\xe5\x83\x8f\xe5\xb0\xba\xe5\xaf\xb8:"), mLblDimension);
+    form->addRow(QString::fromUtf8("\xe5\x83\x8f\xe5\x85\x83\xe5\xa4\xa7\xe5\xb0\x8f:"), mLblPixelSize);
+    form->addRow(QString::fromUtf8("\xe6\x95\xb0\xe6\x8d\xae\xe7\xb1\xbb\xe5\x9e\x8b:"), mLblDataType);
+    form->addRow(QString::fromUtf8("\xe6\x8a\x95\xe5\xbd\xb1\xe4\xbf\xa1\xe6\x81\xaf:"), mLblProjection);
+    form->addRow(QString::fromUtf8("\xe5\x9f\xba\xe5\x87\x86\xe9\x9d\xa2:"),   mLblDatum);
+    form->addRow(QString::fromUtf8("\xe5\xbf\xbd\xe7\x95\xa5\xe5\x80\xbc:"),   mLblNoData);
+    form->addRow(QString::fromUtf8("\xe7\xbb\x8f\xe7\xba\xac\xe5\xba\xa6\xe8\x8c\x83\xe5\x9b\xb4 (WGS84):"), mLblLatLon);
+    form->addRow(QString::fromUtf8("\xe6\x96\x87\xe4\xbb\xb6\xe8\xb7\xaf\xe5\xbe\x84:"), mLblFilePath);
 
     mainLayout->addLayout(form);
     mainLayout->addStretch();

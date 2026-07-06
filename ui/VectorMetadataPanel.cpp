@@ -27,7 +27,7 @@ void VectorMetadataPanel::setupUI()
     auto* mainLayout = new QVBoxLayout(content);
     mainLayout->setContentsMargins(6, 6, 6, 6);
 
-    auto* title = new QLabel(QStringLiteral("矢量元数据"), content);
+    auto* title = new QLabel(QString::fromUtf8("\xe7\x9f\xa2\xe9\x87\x8f\xe5\x85\x83\xe6\x95\xb0\xe6\x8d\xae"), content);
     title->setStyleSheet("font-weight: bold; padding-bottom: 4px;");
     mainLayout->addWidget(title);
 
@@ -42,7 +42,7 @@ void VectorMetadataPanel::setupUI()
     form->setContentsMargins(2, 6, 2, 6);
 
     auto makeLabel = [content]() {
-        auto* lbl = new QLabel(QStringLiteral("--"), content);
+        auto* lbl = new QLabel(QString::fromUtf8("--"), content);
         lbl->setWordWrap(true);
         lbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
         lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
@@ -59,14 +59,14 @@ void VectorMetadataPanel::setupUI()
     mLblExtent       = makeLabel();
     mLblFilePath     = makeLabel();
 
-    form->addRow(QStringLiteral("图层名称:"), mLblDataset);
-    form->addRow(QStringLiteral("几何类型:"), mLblGeomType);
-    form->addRow(QStringLiteral("要素数量:"), mLblFeatureCount);
-    form->addRow(QStringLiteral("投影信息:"), mLblProjection);
-    form->addRow(QStringLiteral("基准面:"),   mLblDatum);
-    form->addRow(QStringLiteral("属性字段:"), mLblFields);
-    form->addRow(QStringLiteral("空间范围:"), mLblExtent);
-    form->addRow(QStringLiteral("文件路径:"), mLblFilePath);
+    form->addRow(QString::fromUtf8("\xe5\x9b\xbe\xe5\xb1\x82\xe5\x90\x8d\xe7\xa7\xb0:"), mLblDataset);
+    form->addRow(QString::fromUtf8("\xe5\x87\xa0\xe4\xbd\x95\xe7\xb1\xbb\xe5\x9e\x8b:"), mLblGeomType);
+    form->addRow(QString::fromUtf8("\xe8\xa6\x81\xe7\xb4\xa0\xe6\x95\xb0\xe9\x87\x8f:"), mLblFeatureCount);
+    form->addRow(QString::fromUtf8("\xe6\x8a\x95\xe5\xbd\xb1\xe4\xbf\xa1\xe6\x81\xaf:"), mLblProjection);
+    form->addRow(QString::fromUtf8("\xe5\x9f\xba\xe5\x87\x86\xe9\x9d\xa2:"),   mLblDatum);
+    form->addRow(QString::fromUtf8("\xe5\xb1\x9e\xe6\x80\xa7\xe5\xad\x97\xe6\xae\xb5:"), mLblFields);
+    form->addRow(QString::fromUtf8("\xe7\xa9\xba\xe9\x97\xb4\xe8\x8c\x83\xe5\x9b\xb4:"), mLblExtent);
+    form->addRow(QString::fromUtf8("\xe6\x96\x87\xe4\xbb\xb6\xe8\xb7\xaf\xe5\xbe\x84:"), mLblFilePath);
 
     mainLayout->addLayout(form);
     mainLayout->addStretch();

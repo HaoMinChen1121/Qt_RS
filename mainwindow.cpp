@@ -25,6 +25,8 @@
 // 表示层 — 仅工作流/批处理保留嵌入式面板
 #include "ui/WorkflowPanel.h"
 #include "ui/BatchProcessPanel.h"
+#include "ui/ToolBoxPanel.h"
+#include "domain/ToolDefinition.h"
 
 #include "dataaccess/ISensorProduct.h"
 #include "dataaccess/SensorProductFactory.h"
@@ -61,6 +63,7 @@ void MainWindow::initUI()
     initLayerPanel();
     initMetadataPanel();
     initBandManagerPanel();
+    initToolBoxPanel();
     initSpectralDialog();
 
     SARibbonBar* ribbonBar = this->ribbonBar();
@@ -190,6 +193,50 @@ void MainWindow::initBandManagerPanel()
                                    | QDockWidget::DockWidgetClosable);
     addDockWidget(Qt::LeftDockWidgetArea, mBandManagerPanel);
     mBandManagerPanel->hide();  // hidden by default, toggled via toolbar button
+}
+
+void MainWindow::initToolBoxPanel()
+{
+    mToolBoxPanel = new ToolBoxPanel(this);
+
+    // Register MVP tools as placeholders — real execution wired later
+    ToolDefinition rasterReproj;
+    rasterReproj.toolId       = QStringLiteral("raster_reproject");
+    rasterReproj.displayName  = QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe9\x87\x8d\xe6\x8a\x95\xe5\xbd\xb1");
+    rasterReproj.category     = QString::fromUtf8("\xe6\x95\xb0\xe6\x8d\xae\xe7\xae\xa1\xe7\x90\x86");
+    rasterReproj.description  = QString::fromUtf8("\xe5\xb0\x86\xe6\xa0\x85\xe6\xa0\xbc\xe6\x95\xb0\xe6\x8d\xae\xe4\xbb\x8e\xe4\xb8\x80\xe7\xa7\x8d\xe5\x9d\x90\xe6\xa0\x87\xe7\xb3\xbb\xe8\xbd\xac\xe6\x8d\xa2\xe5\x88\xb0\xe5\x8f\xa6\xe4\xb8\x80\xe7\xa7\x8d");
+    mToolBoxPanel->registerTool(rasterReproj);
+
+    ToolDefinition vectorReproj;
+    vectorReproj.toolId      = QStringLiteral("vector_reproject");
+    vectorReproj.displayName = QString::fromUtf8("\xe7\x9f\xa2\xe9\x87\x8f\xe9\x87\x8d\xe6\x8a\x95\xe5\xbd\xb1");
+    vectorReproj.category    = QString::fromUtf8("\xe6\x95\xb0\xe6\x8d\xae\xe7\xae\xa1\xe7\x90\x86");
+    vectorReproj.description = QString::fromUtf8("\xe5\xb0\x86\xe7\x9f\xa2\xe9\x87\x8f\xe6\x95\xb0\xe6\x8d\xae\xe4\xbb\x8e\xe4\xb8\x80\xe7\xa7\x8d\xe5\x9d\x90\xe6\xa0\x87\xe7\xb3\xbb\xe8\xbd\xac\xe6\x8d\xa2\xe5\x88\xb0\xe5\x8f\xa6\xe4\xb8\x80\xe7\xa7\x8d");
+    mToolBoxPanel->registerTool(vectorReproj);
+
+    ToolDefinition rasterClip;
+    rasterClip.toolId        = QStringLiteral("raster_clip");
+    rasterClip.displayName   = QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe8\xa3\x81\xe5\x89\xaa");
+    rasterClip.category      = QString::fromUtf8("\xe6\x95\xb0\xe6\x8d\xae\xe7\xae\xa1\xe7\x90\x86");
+    rasterClip.description   = QString::fromUtf8("\xe6\x8c\x89\xe6\x8c\x87\xe5\xae\x9a\xe8\x8c\x83\xe5\x9b\xb4\xe6\x88\x96\xe7\x9f\xa2\xe9\x87\x8f\xe5\x9b\xbe\xe5\xb1\x82\xe8\xa3\x81\xe5\x89\xaa\xe6\xa0\x85\xe6\xa0\xbc\xe6\x95\xb0\xe6\x8d\xae");
+    mToolBoxPanel->registerTool(rasterClip);
+
+    ToolDefinition defineProj;
+    defineProj.toolId        = QStringLiteral("define_projection");
+    defineProj.displayName   = QString::fromUtf8("\xe5\xae\x9a\xe4\xb9\x89\xe6\x8a\x95\xe5\xbd\xb1");
+    defineProj.category      = QString::fromUtf8("\xe6\x8a\x95\xe5\xbd\xb1\xe4\xb8\x8e\xe5\x9d\x90\xe6\xa0\x87\xe7\xb3\xbb");
+    defineProj.description   = QString::fromUtf8("\xe4\xb8\xba\xe6\x95\xb0\xe6\x8d\xae\xe6\x8c\x87\xe5\xae\x9a\xe5\x9d\x90\xe6\xa0\x87\xe7\xb3\xbb\xe4\xbf\xa1\xe6\x81\xaf\xef\xbc\x8c\xe4\xb8\x8d\xe6\x94\xb9\xe5\x8f\x98\xe5\x83\x8f\xe5\x85\x83\xe5\x9d\x90\xe6\xa0\x87");
+    mToolBoxPanel->registerTool(defineProj);
+
+    mToolBoxPanel->hide();  // hidden by default, toggled via windowButtonBar icon
+
+    // Sync toggle button when panel is closed via dock X button
+    connect(mToolBoxPanel, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+        if (mToolBoxToggleAction && mToolBoxToggleAction->isChecked() != visible)
+            mToolBoxToggleAction->setChecked(visible);
+    });
+
+    addDockWidget(Qt::RightDockWidgetArea, mToolBoxPanel);
 }
 
 void MainWindow::initSpectralDialog()
@@ -891,11 +938,19 @@ void MainWindow::createWindowButtonGroupBar()
 {
     SARibbonSystemButtonBar* windowButtonBar = this->windowButtonBar();
     if (!windowButtonBar) return;
-    QAction* actionLogin = new QAction(QIcon(), tr("Login"), this);
-    QAction* actionHelp  = createAction(tr("help"), ":/icon/icon/help.svg");
-    connect(actionLogin, &QAction::triggered, this, &MainWindow::onLoginActionTriggered);
+
+    mToolBoxToggleAction = createAction(tr("ToolBox"), ":/icon/icon/Toolbox.svg", "actToolBoxToggle");
+    mToolBoxToggleAction->setCheckable(true);
+    mToolBoxToggleAction->setChecked(false);
+    mToolBoxToggleAction->setToolTip(tr("Show/Hide ToolBox"));
+    connect(mToolBoxToggleAction, &QAction::toggled, this, [this](bool checked) {
+        if (mToolBoxPanel)
+            mToolBoxPanel->setVisible(checked);
+    });
+    windowButtonBar->addAction(mToolBoxToggleAction);
+
+    QAction* actionHelp = createAction(tr("help"), ":/icon/icon/help.svg");
     connect(actionHelp, &QAction::triggered, this, &MainWindow::onActionHelpTriggered);
-    windowButtonBar->addAction(actionLogin);
     windowButtonBar->addAction(actionHelp);
 }
 
@@ -918,12 +973,16 @@ void MainWindow::onActionHelpTriggered()
     QMessageBox::information(
         this,
         tr("infomation"),
-        tr("\n ==============="
-           "\n 多源遥感影像全流程批处理系统 v0.1"
-           "\n 功能模块：辐射定标 | 几何校正 | 图像融合 | 镶嵌成图"
-           "\n 可选模块：工作流设计器 | 批处理引擎"
+        tr("\n ===================================="
+           "\n 多源遥感影像全流程批处理系统 "
+           "\n"
+           "\n 影像处理：辐射定标 | 几何校正 | 图像融合 | 镶嵌成图"
+           "\n GIS 工具：处理工具箱 (投影转换 / 裁剪 / 定义投影)"
+           "\n 数据支持：栅格影像 (GDAL) | 矢量图层 (OGR)"
+           "\n 流程引擎：工作流设计器 | 批处理引擎"
+           "\n"
            "\n 基于 SARibbonBar v%1"
-           "\n ===============")
+           "\n ====================================")
             .arg(SARibbonBar::versionString())
     );
 }

@@ -208,11 +208,13 @@ void VectorStyleDialog::setupUI()
         mConfig.classifyField = mFieldCombo->currentText();
         mConfig.classCount = mClassCountSpin->value();
         mConfig.strokeWidth = mStrokeWidthSpin->value();
+        mConfig.fillColor = mFillSwatch->color();
+        mConfig.strokeColor = mStrokeSwatch->color();
         const QString& m = mClassMethodCombo->currentText();
         if (m.contains(QStringLiteral("Jenks"))) mConfig.classificationMethod = QStringLiteral("Jenks");
-        else if (m.contains(QStringLiteral("等间隔"))) mConfig.classificationMethod = QStringLiteral("EqualInterval");
-        else if (m.contains(QStringLiteral("分位数"))) mConfig.classificationMethod = QStringLiteral("Quantile");
-        else if (m.contains(QStringLiteral("标准差"))) mConfig.classificationMethod = QStringLiteral("StdDev");
+        else if (m.contains(QString::fromUtf8("\xe7\xad\x89\xe9\x97\xb4\xe9\x9a\x94"))) mConfig.classificationMethod = QStringLiteral("EqualInterval");
+        else if (m.contains(QString::fromUtf8("\xe5\x88\x86\xe4\xbd\x8d\xe6\x95\xb0"))) mConfig.classificationMethod = QStringLiteral("Quantile");
+        else if (m.contains(QString::fromUtf8("\xe6\xa0\x87\xe5\x87\x86\xe5\xb7\xae"))) mConfig.classificationMethod = QStringLiteral("StdDev");
         accept();
     });
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);

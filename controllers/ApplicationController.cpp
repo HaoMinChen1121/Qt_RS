@@ -12,6 +12,10 @@
 #include "services/impl/WorkflowServiceImpl.h"
 #include "services/impl/BatchServiceImpl.h"
 #include "services/impl/LayerServiceImpl.h"
+#include "services/impl/RasterClipServiceImpl.h"
+#include "services/impl/RasterReprojectionServiceImpl.h"
+#include "services/impl/VectorReprojectionServiceImpl.h"
+#include "services/impl/DefineProjectionServiceImpl.h"
 
 // Data access implementations
 #include "dataaccess/SensorProductFactory.h"
@@ -38,11 +42,26 @@
 #include "ui/ProductBandDialog.h"
 #include "ui/ExportDialog.h"
 #include "ui/PipelineDialog.h"
+#include "ui/ToolBoxPanel.h"
+#include "ui/RasterClipDialog.h"
+#include "ui/RasterReprojectionDialog.h"
+#include "ui/VectorReprojectionDialog.h"
+#include "ui/DefineProjectionDialog.h"
+#include "domain/params/RasterClipParams.h"
+#include "domain/params/RasterReprojectionParams.h"
+#include "domain/params/VectorReprojectionParams.h"
+#include "domain/params/DefineProjectionParams.h"
 
 #include <qgsmapcanvas.h>
 #include <qgsrectangle.h>
 #include <qgspointxy.h>
 #include <qgsvertexmarker.h>
+#include <qgsvectorlayer.h>
+#include <qgssinglesymbolrenderer.h>
+#include <qgsfillsymbol.h>
+#include <qgslinesymbol.h>
+#include <qgslinesymbollayer.h>
+#include <qgsmarkersymbol.h>
 #include <QStatusBar>
 #include <QMessageBox>
 #include <QFileDialog>
@@ -84,6 +103,7 @@ void ApplicationController::initialize()
     wireMosaicSignals();
     wireGeometricSignals();
     wireWorkflowSignals();
+    wireToolBoxSignals();
     wireGeneralSignals();
 
     qDebug() << "[ApplicationController] Initialization complete";
@@ -120,6 +140,10 @@ void ApplicationController::createServices()
         mWorkflowRepo.get());
     mBatchSvc       = std::make_unique<BatchServiceImpl>();
     mLayerSvc       = std::make_unique<LayerServiceImpl>(mRasterReader.get(), mVectorReader.get());
+    mRasterClipSvc   = std::make_unique<RasterClipServiceImpl>(mWorkerManager.get());
+    mRasterReprojSvc = std::make_unique<RasterReprojectionServiceImpl>(mWorkerManager.get());
+    mVectorReprojSvc = std::make_unique<VectorReprojectionServiceImpl>(mWorkerManager.get());
+    mDefineProjSvc   = std::make_unique<DefineProjectionServiceImpl>(mWorkerManager.get());
 }
 
 void ApplicationController::wireLayerSignals()
@@ -301,14 +325,56 @@ void ApplicationController::wireLayerSignals()
         VectorStyleDialog dlg(mMainWindow);
         dlg.setFieldNames(vInfo.fieldNames);
 
-        // Try to read current style from existing config (default for now)
+        // Read current layer style to pre-populate the dialog
         VectorStyleConfig cfg;
         cfg.classifyField = vInfo.fieldNames.isEmpty() ? QString() : vInfo.fieldNames.first();
+
+        QgsMapLayer* ml = svc->mapLayer(layerId);
+        QgsVectorLayer* vl = qobject_cast<QgsVectorLayer*>(ml);
+        if (vl)
+        {
+            QgsSingleSymbolRenderer* renderer =
+                dynamic_cast<QgsSingleSymbolRenderer*>(vl->renderer());
+            if (renderer && renderer->symbol())
+            {
+                QgsFillSymbol* fill = dynamic_cast<QgsFillSymbol*>(renderer->symbol());
+                if (fill)
+                {
+                    QColor fc = fill->color();
+                    if (fc.isValid()) cfg.fillColor = fc;
+                    QgsSimpleLineSymbolLayer* sl =
+                        dynamic_cast<QgsSimpleLineSymbolLayer*>(fill->symbolLayer(1));
+                    if (sl)
+                    {
+                        QColor sc = sl->color();
+                        if (sc.isValid()) cfg.strokeColor = sc;
+                        cfg.strokeWidth = sl->width();
+                    }
+                }
+                QgsLineSymbol* line = dynamic_cast<QgsLineSymbol*>(renderer->symbol());
+                if (line)
+                {
+                    QColor lc = line->color();
+                    if (lc.isValid()) cfg.strokeColor = lc;
+                    cfg.strokeWidth = line->width();
+                }
+                QgsMarkerSymbol* marker = dynamic_cast<QgsMarkerSymbol*>(renderer->symbol());
+                if (marker)
+                {
+                    QColor mc = marker->color();
+                    if (mc.isValid()) { cfg.fillColor = mc; cfg.strokeColor = mc; }
+                    cfg.markerSize = marker->size();
+                }
+            }
+        }
+
         dlg.setConfig(cfg);
 
         if (dlg.exec() == QDialog::Accepted)
         {
             svc->setVectorStyle(layerId, dlg.config());
+            // Force immediate processing of the scheduled canvas repaint
+            QApplication::processEvents();
         }
     });
 
@@ -798,6 +864,120 @@ void ApplicationController::wireWorkflowSignals()
             dlg->raise();
             dlg->activateWindow();
         });
+}
+
+void ApplicationController::wireToolBoxSignals()
+{
+    auto* toolBox = mMainWindow->toolBoxPanel();
+    if (!toolBox) return;
+
+    auto* statusBar = mMainWindow->statusBar();
+
+    connect(toolBox, &ToolBoxPanel::toolRequested, this,
+        [this, statusBar](const QString& toolId)
+    {
+        if (toolId == QStringLiteral("raster_clip"))
+        {
+            RasterClipDialog dlg(mMainWindow);
+            if (dlg.exec() == QDialog::Accepted)
+                mRasterClipSvc->execute(dlg.params());
+        }
+        else if (toolId == QStringLiteral("raster_reproject"))
+        {
+            RasterReprojectionDialog dlg(mMainWindow);
+            if (dlg.exec() == QDialog::Accepted)
+                mRasterReprojSvc->execute(dlg.params());
+        }
+        else if (toolId == QStringLiteral("vector_reproject"))
+        {
+            VectorReprojectionDialog dlg(mMainWindow);
+            if (dlg.exec() == QDialog::Accepted)
+                mVectorReprojSvc->execute(dlg.params());
+        }
+        else if (toolId == QStringLiteral("define_projection"))
+        {
+            DefineProjectionDialog dlg(mMainWindow);
+            if (dlg.exec() == QDialog::Accepted)
+                mDefineProjSvc->execute(dlg.params());
+        }
+    });
+
+    // Progress → status bar
+    connect(mRasterClipSvc.get(), &IRasterClipService::progressChanged, this,
+        [statusBar](int percent, const QString& step) {
+            if (statusBar)
+                statusBar->showMessage(
+                    QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe8\xa3\x81\xe5\x89\xaa: %1% - %2")
+                        .arg(percent).arg(step), 5000);
+        });
+
+    // Finished → auto-load result + result panel
+    connect(mRasterClipSvc.get(), &IRasterClipService::finished, this,
+        [this, toolBox](bool success, const QString& outputPath) {
+            if (mPipelineRunning) return;
+            if (success) {
+                // Auto-load the clipped result onto the canvas
+                mLayerSvc->addLayers({outputPath});
+                toolBox->appendResult(true,
+                    QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe8\xa3\x81\xe5\x89\xaa"),
+                    QString::fromUtf8("\xe5\xae\x8c\xe6\x88\x90"));
+            } else {
+                QMessageBox::warning(mMainWindow,
+                    QString::fromUtf8("\xe8\xa3\x81\xe5\x89\xaa\xe5\xa4\xb1\xe8\xb4\xa5"),
+                    QString::fromUtf8("\xe8\xa3\x81\xe5\x89\xaa\xe6\x9c\xaa\xe6\x88\x90\xe5\x8a\x9f\xe5\xae\x8c\xe6\x88\x90\xef\xbc\x8c\xe8\xaf\xb7\xe6\xa3\x80\xe6\x9f\xa5\xe8\xbe\x93\xe5\x85\xa5\xe6\x96\x87\xe4\xbb\xb6\xe5\x92\x8c\xe5\x8f\x82\xe6\x95\xb0\xe3\x80\x82"));
+                toolBox->appendResult(false,
+                    QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe8\xa3\x81\xe5\x89\xaa"),
+                    QString::fromUtf8("\xe5\xa4\xb1\xe8\xb4\xa5"));
+            }
+        });
+
+    connect(mRasterClipSvc.get(), &IRasterClipService::errorOccurred, this,
+        [this](const QString& error) {
+            QMessageBox::critical(mMainWindow,
+                QString::fromUtf8("\xe8\xa3\x81\xe5\x89\xaa\xe9\x94\x99\xe8\xaf\xaf"), error);
+        });
+
+    // ── Raster reprojection wiring ──
+    connect(mRasterReprojSvc.get(), &IRasterReprojectionService::progressChanged, this,
+        [statusBar](int p, const QString& s) {
+            if (statusBar) statusBar->showMessage(QStringLiteral("RasterReproj: %1% - %2").arg(p).arg(s), 5000);
+        });
+    connect(mRasterReprojSvc.get(), &IRasterReprojectionService::finished, this,
+        [this, toolBox](bool ok, const QString& path) {
+            if (mPipelineRunning) return;
+            if (ok) { mLayerSvc->addLayers({path}); toolBox->appendResult(true, QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe9\x87\x8d\xe6\x8a\x95\xe5\xbd\xb1"), QString::fromUtf8("\xe5\xae\x8c\xe6\x88\x90")); }
+            else { QMessageBox::warning(mMainWindow, tr("Failed"), tr("Reprojection failed.")); toolBox->appendResult(false, QString::fromUtf8("\xe6\xa0\x85\xe6\xa0\xbc\xe9\x87\x8d\xe6\x8a\x95\xe5\xbd\xb1"), tr("Failed")); }
+        });
+    connect(mRasterReprojSvc.get(), &IRasterReprojectionService::errorOccurred, this,
+        [this](const QString& e) { QMessageBox::critical(mMainWindow, tr("Error"), e); });
+
+    // ── Vector reprojection wiring ──
+    connect(mVectorReprojSvc.get(), &IVectorReprojectionService::progressChanged, this,
+        [statusBar](int p, const QString& s) {
+            if (statusBar) statusBar->showMessage(QStringLiteral("VectorReproj: %1% - %2").arg(p).arg(s), 5000);
+        });
+    connect(mVectorReprojSvc.get(), &IVectorReprojectionService::finished, this,
+        [this, toolBox](bool ok, const QString& path) {
+            if (mPipelineRunning) return;
+            if (ok) { mLayerSvc->addVectorLayers({path}); toolBox->appendResult(true, QString::fromUtf8("\xe7\x9f\xa2\xe9\x87\x8f\xe9\x87\x8d\xe6\x8a\x95\xe5\xbd\xb1"), QString::fromUtf8("\xe5\xae\x8c\xe6\x88\x90")); }
+            else { QMessageBox::warning(mMainWindow, tr("Failed"), tr("Reprojection failed.")); toolBox->appendResult(false, QString::fromUtf8("\xe7\x9f\xa2\xe9\x87\x8f\xe9\x87\x8d\xe6\x8a\x95\xe5\xbd\xb1"), tr("Failed")); }
+        });
+    connect(mVectorReprojSvc.get(), &IVectorReprojectionService::errorOccurred, this,
+        [this](const QString& e) { QMessageBox::critical(mMainWindow, tr("Error"), e); });
+
+    // ── Define projection wiring ──
+    connect(mDefineProjSvc.get(), &IDefineProjectionService::progressChanged, this,
+        [statusBar](int p, const QString& s) {
+            if (statusBar) statusBar->showMessage(QStringLiteral("DefineProj: %1% - %2").arg(p).arg(s), 5000);
+        });
+    connect(mDefineProjSvc.get(), &IDefineProjectionService::finished, this,
+        [this, toolBox](bool ok, const QString& path) {
+            if (mPipelineRunning) return;
+            if (ok) { toolBox->appendResult(true, QString::fromUtf8("\xe5\xae\x9a\xe4\xb9\x89\xe6\x8a\x95\xe5\xbd\xb1"), QString::fromUtf8("\xe5\xae\x8c\xe6\x88\x90: %1").arg(path)); }
+            else { QMessageBox::warning(mMainWindow, tr("Failed"), tr("Define projection failed.")); toolBox->appendResult(false, QString::fromUtf8("\xe5\xae\x9a\xe4\xb9\x89\xe6\x8a\x95\xe5\xbd\xb1"), tr("Failed")); }
+        });
+    connect(mDefineProjSvc.get(), &IDefineProjectionService::errorOccurred, this,
+        [this](const QString& e) { QMessageBox::critical(mMainWindow, tr("Error"), e); });
 }
 
 void ApplicationController::wireGeneralSignals()

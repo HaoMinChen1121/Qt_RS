@@ -130,7 +130,25 @@
     <QtMoc Include="ui\SpectralProfileDialog.h">
       <Filter>UI</Filter>
     </QtMoc>
-        <QtMoc Include="ui\LayerPanel.h">
+    <QtMoc Include="ui\ToolBoxPanel.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\RasterClipDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\RasterReprojectionDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\VectorReprojectionDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\DefineProjectionDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\CrsSelectDialog.h">
+      <Filter>UI</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\LayerPanel.h">
       <Filter>UI</Filter>
     </QtMoc>
   </ItemGroup>
@@ -159,6 +177,18 @@
     <QtMoc Include="services\IGeometricService.h">
       <Filter>Services</Filter>
     </QtMoc>
+    <QtMoc Include="services\IRasterClipService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IRasterReprojectionService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IVectorReprojectionService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
+    <QtMoc Include="services\IDefineProjectionService.h">
+      <Filter>Services</Filter>
+    </QtMoc>
     <QtMoc Include="services\impl\RadiometricServiceImpl.h">
       <Filter>Services\Impl</Filter>
     </QtMoc>
@@ -178,6 +208,18 @@
       <Filter>Services\Impl</Filter>
     </QtMoc>
     <QtMoc Include="services\impl\GeometricServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\RasterClipServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\RasterReprojectionServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\VectorReprojectionServiceImpl.h">
+      <Filter>Services\Impl</Filter>
+    </QtMoc>
+    <QtMoc Include="services\impl\DefineProjectionServiceImpl.h">
       <Filter>Services\Impl</Filter>
     </QtMoc>
     <ClInclude Include="controllers\PipelineExpander.h">
@@ -202,6 +244,18 @@
       <Filter>Controllers\Workers</Filter>
     </QtMoc>
     <QtMoc Include="controllers\workers\GeometricWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\RasterClipWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\RasterReprojectionWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\VectorReprojectionWorker.h">
+      <Filter>Controllers\Workers</Filter>
+    </QtMoc>
+    <QtMoc Include="controllers\workers\DefineProjectionWorker.h">
       <Filter>Controllers\Workers</Filter>
     </QtMoc>
   </ItemGroup>
@@ -235,6 +289,21 @@
     </ClInclude>
     <ClInclude Include="domain\ProductDescriptor.h">
       <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\ToolDefinition.h">
+      <Filter>Domain</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\RasterClipParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\RasterReprojectionParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\VectorReprojectionParams.h">
+      <Filter>Domain\Params</Filter>
+    </ClInclude>
+    <ClInclude Include="domain\params\DefineProjectionParams.h">
+      <Filter>Domain\Params</Filter>
     </ClInclude>
     <ClInclude Include="domain\ProcessingTask.h">
       <Filter>Domain</Filter>
@@ -436,7 +505,25 @@
     <ClCompile Include="ui\SpectralProfileDialog.cpp">
       <Filter>UI</Filter>
     </ClCompile>
-        <ClCompile Include="ui\LayerPanel.cpp">
+    <ClCompile Include="ui\ToolBoxPanel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\RasterClipDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\RasterReprojectionDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\VectorReprojectionDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\DefineProjectionDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\CrsSelectDialog.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\LayerPanel.cpp">
       <Filter>UI</Filter>
     </ClCompile>
     <ClCompile Include="domain\WorkflowGraph.cpp">
@@ -461,6 +548,18 @@
       <Filter>Services\Impl</Filter>
     </ClCompile>
     <ClCompile Include="services\impl\GeometricServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\RasterClipServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\RasterReprojectionServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\VectorReprojectionServiceImpl.cpp">
+      <Filter>Services\Impl</Filter>
+    </ClCompile>
+    <ClCompile Include="services\impl\DefineProjectionServiceImpl.cpp">
       <Filter>Services\Impl</Filter>
     </ClCompile>
     <ClCompile Include="dataaccess\impl\GdalRasterReader.cpp">
@@ -572,6 +671,18 @@
       <Filter>Controllers\Workers</Filter>
     </ClCompile>
     <ClCompile Include="controllers\workers\GeometricWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\RasterClipWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\RasterReprojectionWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\VectorReprojectionWorker.cpp">
+      <Filter>Controllers\Workers</Filter>
+    </ClCompile>
+    <ClCompile Include="controllers\workers\DefineProjectionWorker.cpp">
       <Filter>Controllers\Workers</Filter>
     </ClCompile>
   </ItemGroup>

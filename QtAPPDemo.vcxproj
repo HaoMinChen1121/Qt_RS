@@ -122,9 +122,20 @@
     <QtMoc Include="ui\VectorStyleDialog.h" />
     <QtMoc Include="ui\LegendPanel.h" />
     <QtMoc Include="ui\SpectralProfileDialog.h" />
+    <QtMoc Include="ui\ToolBoxPanel.h" />
+    <QtMoc Include="ui\RasterClipDialog.h" />
+    <QtMoc Include="ui\RasterReprojectionDialog.h" />
+    <QtMoc Include="ui\VectorReprojectionDialog.h" />
+    <QtMoc Include="ui\DefineProjectionDialog.h" />
+    <QtMoc Include="ui\CrsSelectDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <!-- 参数结构体 (无 Q_OBJECT, 纯头文件) -->
+    <ClInclude Include="domain\ToolDefinition.h" />
+    <ClInclude Include="domain\params\RasterClipParams.h" />
+    <ClInclude Include="domain\params\RasterReprojectionParams.h" />
+    <ClInclude Include="domain\params\VectorReprojectionParams.h" />
+    <ClInclude Include="domain\params\DefineProjectionParams.h" />
     <ClInclude Include="domain\params\RadiometricCorrectionParams.h" />
     <ClInclude Include="domain\params\ImageFusionParams.h" />
     <ClInclude Include="domain\params\MosaicParams.h" />
@@ -202,6 +213,10 @@
     <QtMoc Include="services\IBatchService.h" />
     <QtMoc Include="services\ILayerService.h" />
     <QtMoc Include="services\IGeometricService.h" />
+    <QtMoc Include="services\IRasterClipService.h" />
+    <QtMoc Include="services\IRasterReprojectionService.h" />
+    <QtMoc Include="services\IVectorReprojectionService.h" />
+    <QtMoc Include="services\IDefineProjectionService.h" />
     <!-- 业务服务实现 (含 Q_OBJECT) -->
     <QtMoc Include="services\impl\RadiometricServiceImpl.h" />
     <QtMoc Include="services\impl\FusionServiceImpl.h" />
@@ -210,6 +225,10 @@
     <QtMoc Include="services\impl\BatchServiceImpl.h" />
     <QtMoc Include="services\impl\LayerServiceImpl.h" />
     <QtMoc Include="services\impl\GeometricServiceImpl.h" />
+    <QtMoc Include="services\impl\RasterClipServiceImpl.h" />
+    <QtMoc Include="services\impl\RasterReprojectionServiceImpl.h" />
+    <QtMoc Include="services\impl\VectorReprojectionServiceImpl.h" />
+    <QtMoc Include="services\impl\DefineProjectionServiceImpl.h" />
     <!-- 控制器 (含 Q_OBJECT) -->
     <ClInclude Include="controllers\PipelineExpander.h" />
     <QtMoc Include="controllers\ApplicationController.h" />
@@ -218,6 +237,10 @@
     <!-- TaskWorker 子类 (含 Q_OBJECT) -->
     <QtMoc Include="controllers\workers\RadiometricWorker.h" />
     <QtMoc Include="controllers\workers\GeometricWorker.h" />
+    <QtMoc Include="controllers\workers\RasterClipWorker.h" />
+    <QtMoc Include="controllers\workers\RasterReprojectionWorker.h" />
+    <QtMoc Include="controllers\workers\VectorReprojectionWorker.h" />
+    <QtMoc Include="controllers\workers\DefineProjectionWorker.h" />
   </ItemGroup>
   <ItemGroup>
 
@@ -245,6 +268,12 @@
     <ClCompile Include="ui\VectorStyleDialog.cpp" />
     <ClCompile Include="ui\LegendPanel.cpp" />
     <ClCompile Include="ui\SpectralProfileDialog.cpp" />
+    <ClCompile Include="ui\ToolBoxPanel.cpp" />
+    <ClCompile Include="ui\RasterClipDialog.cpp" />
+    <ClCompile Include="ui\RasterReprojectionDialog.cpp" />
+    <ClCompile Include="ui\VectorReprojectionDialog.cpp" />
+    <ClCompile Include="ui\DefineProjectionDialog.cpp" />
+    <ClCompile Include="ui\CrsSelectDialog.cpp" />
     <!-- 领域对象实现 -->
     <ClCompile Include="domain\WorkflowGraph.cpp" />
     <!-- 业务服务实现 -->
@@ -255,6 +284,10 @@
     <ClCompile Include="services\impl\BatchServiceImpl.cpp" />
     <ClCompile Include="services\impl\LayerServiceImpl.cpp" />
     <ClCompile Include="services\impl\GeometricServiceImpl.cpp" />
+    <ClCompile Include="services\impl\RasterClipServiceImpl.cpp" />
+    <ClCompile Include="services\impl\RasterReprojectionServiceImpl.cpp" />
+    <ClCompile Include="services\impl\VectorReprojectionServiceImpl.cpp" />
+    <ClCompile Include="services\impl\DefineProjectionServiceImpl.cpp" />
     <!-- 数据访问实现 -->
     <ClCompile Include="dataaccess\impl\GdalRasterReader.cpp" />
     <ClCompile Include="dataaccess\impl\GdalRasterWriter.cpp" />
@@ -299,6 +332,10 @@
     <ClCompile Include="controllers\workers\FusionWorker.cpp" />
     <ClCompile Include="controllers\workers\MosaicWorker.cpp" />
     <ClCompile Include="controllers\workers\GeometricWorker.cpp" />
+    <ClCompile Include="controllers\workers\RasterClipWorker.cpp" />
+    <ClCompile Include="controllers\workers\RasterReprojectionWorker.cpp" />
+    <ClCompile Include="controllers\workers\VectorReprojectionWorker.cpp" />
+    <ClCompile Include="controllers\workers\DefineProjectionWorker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <!-- CUDA 源文件 -->
